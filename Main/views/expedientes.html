@@ -1,9 +1,9 @@
-<!-- Expedientes — lista con búsqueda y filtros de estado -->
+<!-- Expedientes — lista con búsqueda y filtros -->
 <div style="padding-bottom: 80px;">
 
-  <!-- Búsqueda -->
-  <div style="padding: var(--s4) var(--s4) 0;">
-    <div style="position:relative;">
+  <!-- Búsqueda + botón filtros -->
+  <div style="padding: var(--s4) var(--s4) 0; display:flex; gap:var(--s2);">
+    <div style="position:relative; flex:1;">
       <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"
            style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);pointer-events:none;">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
@@ -17,17 +17,88 @@
         style="padding-left:36px;"
       />
     </div>
+    <!-- Botón filtros extra -->
+    <button
+      id="btn-filtros"
+      style="
+        flex-shrink:0; height:44px; padding:0 14px;
+        border-radius:var(--r-md); border:1.5px solid var(--border-strong);
+        background:var(--surface); color:var(--text-secondary);
+        font-size:var(--text-sm); font-weight:var(--weight-semi);
+        cursor:pointer; display:flex; align-items:center; gap:6px;
+        font-family:var(--font); transition:all var(--t-fast); white-space:nowrap;
+      "
+    >
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h18M7 12h10M11 20h2"/>
+      </svg>
+      Filtros
+      <span id="filtros-badge" style="
+        display:none; min-width:18px; height:18px; border-radius:var(--r-full);
+        background:var(--brand); color:white; font-size:10px; font-weight:700;
+        align-items:center; justify-content:center; padding:0 4px;
+      ">0</span>
+    </button>
   </div>
 
-  <!-- Filtros de estado -->
-  <div style="overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: var(--s3) var(--s4) 0;">
-    <div id="exp-filters" style="display: flex; gap: 6px; width: max-content; padding-bottom: var(--s3);">
+  <!-- Filtros de estado (pills) -->
+  <div style="overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:var(--s3) var(--s4) 0;">
+    <div id="exp-filters" style="display:flex; gap:6px; width:max-content; padding-bottom:var(--s3);">
       <button class="pill-filter pill-active" data-estado="">Todos</button>
       <button class="pill-filter" data-estado="pendiente">Pendiente</button>
       <button class="pill-filter" data-estado="en_gestion">En gestión</button>
       <button class="pill-filter" data-estado="pendiente_revision">P. revisión</button>
       <button class="pill-filter" data-estado="rescatada">Rescatada</button>
       <button class="pill-filter" data-estado="cerrada">Cerrada</button>
+    </div>
+  </div>
+
+  <!-- Panel de filtros extra (colapsable) -->
+  <div id="panel-filtros" style="
+    overflow:hidden; max-height:0;
+    transition:max-height 260ms cubic-bezier(0.16,1,0.3,1);
+    padding:0 var(--s4);
+  ">
+    <div style="
+      background:var(--surface); border:1px solid var(--border-strong);
+      border-radius:var(--r-lg); padding:var(--s4);
+      display:flex; flex-direction:column; gap:var(--s3);
+      margin-bottom:var(--s3);
+    ">
+      <!-- Jefe de equipo (solo supervisor / jefe_zona) -->
+      <div id="filtro-jefe-wrap" style="display:none;">
+        <label style="font-size:var(--text-xs); font-weight:var(--weight-semi); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:6px;">
+          Jefe de equipo
+        </label>
+        <select id="filtro-jefe" class="select" style="width:100%;">
+          <option value="">Todos los jefes</option>
+        </select>
+      </div>
+
+      <!-- Rango de fechas -->
+      <div>
+        <label style="font-size:var(--text-xs); font-weight:var(--weight-semi); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:6px;">
+          Periodo
+        </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--s2);">
+          <div>
+            <div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-bottom:4px;">Desde</div>
+            <input id="filtro-desde" type="date" class="input" style="font-size:var(--text-sm); padding:10px 12px;" />
+          </div>
+          <div>
+            <div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-bottom:4px;">Hasta</div>
+            <input id="filtro-hasta" type="date" class="input" style="font-size:var(--text-sm); padding:10px 12px;" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Limpiar -->
+      <button id="btn-limpiar-filtros" style="
+        background:none; border:none; color:var(--text-tertiary);
+        font-size:var(--text-xs); font-weight:var(--weight-semi);
+        cursor:pointer; text-align:right; font-family:var(--font);
+        padding:0; align-self:flex-end;
+      ">Limpiar filtros extra</button>
     </div>
   </div>
 
@@ -43,15 +114,15 @@
     id="exp-fab"
     aria-label="Nuevo expediente"
     style="
-      position: fixed; bottom: 76px; right: 20px;
-      width: 52px; height: 52px; border-radius: 50%;
-      background: var(--brand-gradient);
-      border: none; cursor: pointer;
-      box-shadow: 0 4px 20px var(--brand-shadow);
-      color: white; font-size: 26px; font-weight: 300;
-      display: none; align-items: center; justify-content: center;
-      z-index: 50;
-      transition: transform var(--t-fast), box-shadow var(--t-fast);
+      position:fixed; bottom:76px; right:20px;
+      width:52px; height:52px; border-radius:50%;
+      background:var(--brand-gradient);
+      border:none; cursor:pointer;
+      box-shadow:0 4px 20px var(--brand-shadow);
+      color:white; font-size:26px; font-weight:300;
+      display:none; align-items:center; justify-content:center;
+      z-index:50;
+      transition:transform var(--t-fast), box-shadow var(--t-fast);
     "
   >+</button>
 
@@ -59,7 +130,7 @@
 
 <script>
 (async function () {
-  const { listarExpedientes, ESTADO_LABEL } = await import('/js/expedientes.js');
+  const { listarExpedientes, listarJefesEquipo, ESTADO_LABEL } = await import('/js/expedientes.js');
   const rol = window.__getCurrentRol?.();
 
   // FAB — solo supervisor
@@ -69,33 +140,120 @@
     fab.addEventListener('click', () => window.__navigate('#/nuevo'));
   }
 
-  // Restaurar filtros desde la URL
+  // ── Restaurar filtros desde URL ─────────────────────────
   const params     = window.__getRouteParams?.() ?? new URLSearchParams();
-  let estadoActivo = params.get('estado') ?? '';
-  let busqueda     = params.get('q') ?? '';
+  let estadoActivo = params.get('estado')  ?? '';
+  let busqueda     = params.get('q')       ?? '';
+  let jefeId       = params.get('jefe')    ?? '';
+  let fechaDesde   = params.get('desde')   ?? '';
+  let fechaHasta   = params.get('hasta')   ?? '';
 
-  // Aplicar estado inicial al pill activo
+  // Aplicar estado inicial a pills
   if (estadoActivo) {
-    document.querySelectorAll('#exp-filters .pill-filter').forEach(b => {
-      b.classList.toggle('pill-active', b.dataset.estado === estadoActivo);
-    });
+    document.querySelectorAll('#exp-filters .pill-filter').forEach(b =>
+      b.classList.toggle('pill-active', b.dataset.estado === estadoActivo)
+    );
   }
 
-  // Aplicar búsqueda inicial al input
+  // Aplicar búsqueda inicial
   const searchEl = document.getElementById('exp-search');
   if (searchEl && busqueda) searchEl.value = busqueda;
 
-  // Actualizar la URL sin recargar la vista (history.replaceState)
+  // Aplicar fechas iniciales
+  if (fechaDesde) document.getElementById('filtro-desde').value = fechaDesde;
+  if (fechaHasta) document.getElementById('filtro-hasta').value = fechaHasta;
+
+  // ── Cargar jefes (supervisor / jefe_zona) ──────────────
+  if (rol === 'supervisor' || rol === 'jefe_zona') {
+    const jefeWrap = document.getElementById('filtro-jefe-wrap');
+    jefeWrap.style.display = 'block';
+    try {
+      const jefes = await listarJefesEquipo();
+      const sel   = document.getElementById('filtro-jefe');
+      jefes.forEach(j => {
+        const opt = document.createElement('option');
+        opt.value = j.id;
+        opt.textContent = j.nombre;
+        if (j.id === jefeId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', () => {
+        jefeId = sel.value;
+        actualizarURL();
+        actualizarBadge();
+        cargar();
+      });
+    } catch {}
+  }
+
+  // ── URL ────────────────────────────────────────────────
   function actualizarURL() {
     const p = new URLSearchParams();
     if (estadoActivo) p.set('estado', estadoActivo);
-    if (busqueda)     p.set('q', busqueda);
+    if (busqueda)     p.set('q',      busqueda);
+    if (jefeId)       p.set('jefe',   jefeId);
+    if (fechaDesde)   p.set('desde',  fechaDesde);
+    if (fechaHasta)   p.set('hasta',  fechaHasta);
     const qs = p.toString();
     history.replaceState(null, '', '#/expedientes' + (qs ? '?' + qs : ''));
   }
 
+  // ── Badge de filtros activos ───────────────────────────
+  function actualizarBadge() {
+    const activos = (jefeId ? 1 : 0) + (fechaDesde ? 1 : 0) + (fechaHasta ? 1 : 0);
+    const badge   = document.getElementById('filtros-badge');
+    const btn     = document.getElementById('btn-filtros');
+    badge.textContent    = activos;
+    badge.style.display  = activos > 0 ? 'flex' : 'none';
+    btn.style.borderColor = activos > 0 ? 'var(--brand)' : 'var(--border-strong)';
+    btn.style.color       = activos > 0 ? 'var(--brand)' : 'var(--text-secondary)';
+  }
+
+  // ── Toggle panel filtros ───────────────────────────────
+  let panelAbierto = false;
+  const panel = document.getElementById('panel-filtros');
+
+  // Abrir si hay filtros activos al restaurar
+  if (jefeId || fechaDesde || fechaHasta) {
+    panelAbierto = true;
+    panel.style.maxHeight = '400px';
+    actualizarBadge();
+  }
+
+  document.getElementById('btn-filtros').addEventListener('click', () => {
+    panelAbierto = !panelAbierto;
+    panel.style.maxHeight = panelAbierto ? '400px' : '0';
+  });
+
+  // ── Fechas ─────────────────────────────────────────────
+  document.getElementById('filtro-desde').addEventListener('change', e => {
+    fechaDesde = e.target.value;
+    actualizarURL();
+    actualizarBadge();
+    cargar();
+  });
+
+  document.getElementById('filtro-hasta').addEventListener('change', e => {
+    fechaHasta = e.target.value;
+    actualizarURL();
+    actualizarBadge();
+    cargar();
+  });
+
+  // ── Limpiar filtros extra ──────────────────────────────
+  document.getElementById('btn-limpiar-filtros').addEventListener('click', () => {
+    jefeId = fechaDesde = fechaHasta = '';
+    document.getElementById('filtro-jefe').value  = '';
+    document.getElementById('filtro-desde').value = '';
+    document.getElementById('filtro-hasta').value = '';
+    actualizarURL();
+    actualizarBadge();
+    cargar();
+  });
+
+  // ── Tarjeta expediente ─────────────────────────────────
   function tarjeta(e) {
-    const fecha   = new Date(e.fecha_creacion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const fecha   = new Date(e.fecha_creacion).toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
     const tecnico = e.tecnico ? `<span style="color:var(--text-tertiary)"> · ${e.tecnico.nombre}</span>` : '';
     return `
       <div class="card card-expediente estado-${e.estado}"
@@ -123,6 +281,7 @@
       </div>`;
   }
 
+  // ── Cargar lista ───────────────────────────────────────
   async function cargar() {
     const listEl = document.getElementById('exp-list');
     if (!listEl) return;
@@ -131,7 +290,14 @@
       <div class="skeleton skeleton-card"></div>
       <div class="skeleton skeleton-card"></div>`;
     try {
-      const exps = await listarExpedientes({ estado: estadoActivo || undefined, busqueda: busqueda || undefined });
+      const hayFiltros = estadoActivo || busqueda || jefeId || fechaDesde || fechaHasta;
+      const exps = await listarExpedientes({
+        estado:     estadoActivo || undefined,
+        busqueda:   busqueda     || undefined,
+        jefeId:     jefeId       || undefined,
+        fechaDesde: fechaDesde   || undefined,
+        fechaHasta: fechaHasta   || undefined,
+      });
       if (!exps.length) {
         listEl.innerHTML = `
           <div class="empty-state">
@@ -141,7 +307,7 @@
               </svg>
             </div>
             <div class="empty-title">Sin expedientes</div>
-            <div class="empty-body">No hay expedientes${estadoActivo || busqueda ? ' con estos filtros' : ' todavía'}.</div>
+            <div class="empty-body">No hay expedientes${hayFiltros ? ' con estos filtros' : ' todavía'}.</div>
           </div>`;
         return;
       }
@@ -154,7 +320,7 @@
     }
   }
 
-  // Filtros de estado
+  // ── Filtros de estado (pills) ──────────────────────────
   document.getElementById('exp-filters')?.addEventListener('click', ev => {
     const btn = ev.target.closest('[data-estado]');
     if (!btn) return;
@@ -165,15 +331,12 @@
     cargar();
   });
 
-  // Búsqueda con debounce
+  // ── Búsqueda con debounce ──────────────────────────────
   let debounceTimer;
   searchEl?.addEventListener('input', () => {
     busqueda = searchEl.value;
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      actualizarURL();
-      cargar();
-    }, 320);
+    debounceTimer = setTimeout(() => { actualizarURL(); cargar(); }, 320);
   });
 
   cargar();
