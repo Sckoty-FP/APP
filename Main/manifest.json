@@ -4,8 +4,8 @@
   "description": "Sistema de Gestión de Rescate de PPA",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#5C0A0A",
+  "theme_color": "#5C0A0A",
   "orientation": "portrait-primary",
   "lang": "es",
   "icons": [
@@ -20,6 +20,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }

@@ -6,7 +6,7 @@
 
 ## Estado actual
 
-**Fase activa:** 10 — Dashboards y estadísticas
+**Fase activa:** 8 — Importación Excel (bloqueada — esperando archivo)
 **Ultima actualizacion:** 2026-07-19
 
 ---
@@ -33,8 +33,8 @@
 | 7 | Maquina de estados | ✅ Completada — BD rechaza transiciones prohibidas, verificado |
 | 8 | Importacion Excel | Bloqueada (falta Excel real) |
 | 9 | Busqueda y filtros | ✅ Completada — filtros combinados en URL, restauración automática |
-| 10 | Dashboards | Pendiente |
-| 11 | PWA y pulido | Pendiente |
+| 10 | Dashboards | ✅ Completada — KPIs SQL (05_kpis.sql), Chart.js, inicio.html, perfil.html |
+| 11 | PWA y pulido | ✅ Completada — sw.js, manifest actualizado, icons/icon.svg + generate.html |
 
 ---
 
@@ -51,6 +51,8 @@ live-server rompe los fragmentos HTML inyectando scripts dentro de los <svg>.
 ## Pendientes criticos
 
 - [ ] Conseguir el Excel real de importacion (desbloquea Fase 8)
+- [ ] Ejecutar Main/sql/05_kpis.sql en Supabase SQL Editor (desbloquea estadísticas)
+- [ ] Generar iconos PNG: abrir Main/icons/generate.html en el navegador y guardar los archivos en Main/icons/
 - [ ] Emails de jefes de equipo reales
 
 ---

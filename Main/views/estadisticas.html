@@ -1,3 +1,188 @@
-<div class="p-6">
-  <p class="text-sm text-gray-400">Estadísticas — disponible en la Fase 10.</p>
+<!-- Estadísticas — KPIs y gráficos -->
+<div style="padding: var(--s4); padding-bottom: 80px;">
+
+  <!-- Grid KPIs -->
+  <div id="kpi-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); margin-bottom:var(--s5);">
+    <div class="skeleton" style="height:88px; border-radius:var(--r-lg);"></div>
+    <div class="skeleton" style="height:88px; border-radius:var(--r-lg);"></div>
+    <div class="skeleton" style="height:88px; border-radius:var(--r-lg);"></div>
+    <div class="skeleton" style="height:88px; border-radius:var(--r-lg);"></div>
+  </div>
+
+  <!-- Distribución por estado -->
+  <div class="card" style="margin-bottom:var(--s4); padding:var(--s4);">
+    <div style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary); margin-bottom:var(--s4);">
+      Distribución por estado
+    </div>
+    <div id="donut-wrap" style="position:relative; height:180px; display:flex; align-items:center; justify-content:center;">
+      <div class="skeleton" style="width:180px; height:180px; border-radius:50%;"></div>
+    </div>
+    <div id="donut-legend" style="display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:var(--s3);"></div>
+  </div>
+
+  <!-- Tendencia mensual -->
+  <div class="card" style="padding:var(--s4);">
+    <div style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary); margin-bottom:var(--s4);">
+      Expedientes por mes
+    </div>
+    <div id="barras-wrap" style="position:relative; height:160px;">
+      <div class="skeleton" style="width:100%; height:160px; border-radius:var(--r-sm);"></div>
+    </div>
+  </div>
+
 </div>
+
+<script>
+(async function () {
+  const { obtenerKpiResumen, obtenerKpiTendencia } = await import('/js/estadisticas.js');
+
+  // Cargar Chart.js desde CDN de forma dinámica
+  async function loadChartJs() {
+    if (window.Chart) return;
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  function formatMes(yyyymm) {
+    const [y, m] = yyyymm.split('-');
+    const nombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return `${nombres[parseInt(m, 10) - 1]} '${y.slice(2)}`;
+  }
+
+  function kpiCard(label, value, colorVar, sub) {
+    return `
+      <div style="
+        background:var(--surface); border-radius:var(--r-lg); padding:var(--s4);
+        border:1px solid var(--border); box-shadow:var(--shadow-xs);
+      ">
+        <div style="font-size:10px; font-weight:var(--weight-semi); color:var(--text-tertiary);
+                    text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">${label}</div>
+        <div style="font-size:var(--text-3xl); font-weight:var(--weight-bold); color:${colorVar}; line-height:1;">${value}</div>
+        ${sub ? `<div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-top:4px;">${sub}</div>` : ''}
+      </div>`;
+  }
+
+  const ESTADOS = [
+    { key: 'pendiente',     label: 'Pendiente',   color: '#F97316' },
+    { key: 'en_gestion',    label: 'En gestión',  color: '#2563EB' },
+    { key: 'pend_revision', label: 'P. revisión', color: '#9333EA' },
+    { key: 'rescatada',     label: 'Rescatada',   color: '#059669' },
+    { key: 'cerrada',       label: 'Cerrada',     color: '#64748B' },
+  ];
+
+  try {
+    const [resumen, tendencia] = await Promise.all([
+      obtenerKpiResumen(),
+      obtenerKpiTendencia(6),
+      loadChartJs(),
+    ]);
+
+    const activos    = (resumen.pendiente || 0) + (resumen.en_gestion || 0) + (resumen.pend_revision || 0);
+    const finalizados = (resumen.rescatada || 0) + (resumen.cerrada || 0);
+    const tasa       = finalizados > 0
+      ? Math.round(((resumen.rescatada || 0) / finalizados) * 100)
+      : null;
+
+    // KPI cards
+    const kpiGrid = document.getElementById('kpi-grid');
+    if (kpiGrid) {
+      kpiGrid.innerHTML =
+        kpiCard('Total', resumen.total || 0, 'var(--text-primary)') +
+        kpiCard('Activos', activos, 'var(--gestion-accent)') +
+        kpiCard('Rescatadas', resumen.rescatada || 0, 'var(--rescatada-accent)') +
+        kpiCard(
+          'Tasa rescate',
+          tasa !== null ? `${tasa}%` : '—',
+          'var(--rescatada-accent)',
+          finalizados > 0 ? `sobre ${finalizados} cerrados` : 'sin casos cerrados'
+        );
+    }
+
+    // Donut
+    const donutWrap = document.getElementById('donut-wrap');
+    if (donutWrap) {
+      donutWrap.innerHTML = '<canvas id="chart-donut" style="max-height:180px;"></canvas>';
+      new window.Chart(document.getElementById('chart-donut').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels:   ESTADOS.map(e => e.label),
+          datasets: [{
+            data:            ESTADOS.map(e => resumen[e.key] || 0),
+            backgroundColor: ESTADOS.map(e => e.color),
+            borderWidth: 0,
+            hoverOffset: 4,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          cutout: '65%',
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed}` } },
+          },
+        },
+      });
+
+      const legend = document.getElementById('donut-legend');
+      if (legend) {
+        legend.innerHTML = ESTADOS.map(e => `
+          <div style="display:flex; align-items:center; gap:5px; font-size:var(--text-xs); color:var(--text-secondary);">
+            <span style="width:8px; height:8px; border-radius:2px; background:${e.color}; flex-shrink:0;"></span>
+            ${e.label} <strong style="color:var(--text-primary);">${resumen[e.key] || 0}</strong>
+          </div>`).join('');
+      }
+    }
+
+    // Barras
+    const barrasWrap = document.getElementById('barras-wrap');
+    if (barrasWrap) {
+      barrasWrap.innerHTML = '<canvas id="chart-barras"></canvas>';
+      new window.Chart(document.getElementById('chart-barras').getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels:   tendencia.map(t => formatMes(t.mes)),
+          datasets: [{
+            label: 'Expedientes',
+            data:   tendencia.map(t => t.total),
+            backgroundColor: 'rgba(220,38,38,0.12)',
+            borderColor:     '#DC2626',
+            borderWidth: 1.5,
+            borderRadius: 4,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1, font: { size: 10 } },
+              grid:  { color: 'rgba(0,0,0,0.04)' },
+            },
+            x: {
+              ticks: { font: { size: 10 } },
+              grid:  { display: false },
+            },
+          },
+        },
+      });
+    }
+
+  } catch (err) {
+    const kpiGrid = document.getElementById('kpi-grid');
+    if (kpiGrid) {
+      kpiGrid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <p style="color:var(--danger); font-size:var(--text-sm);">${err.message}</p>
+        </div>`;
+    }
+  }
+})();
+</script>

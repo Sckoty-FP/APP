@@ -19,4 +19,11 @@ async function init() {
   initRouter();
 }
 
+// ── Service Worker ─────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(err =>
+    console.warn('[SW] registro fallido:', err)
+  );
+}
+
 document.addEventListener('DOMContentLoaded', init);

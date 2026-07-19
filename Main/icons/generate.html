@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generar iconos PWA — SGR-PPA</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 32px; background: #f5f4f4; }
+    h1 { color: #5C0A0A; margin-bottom: 8px; }
+    p { color: #475569; margin-bottom: 16px; }
+    canvas { display: block; border-radius: 12px; margin: 8px 0; border: 1px solid #e2e8f0; }
+    button {
+      background: #DC2626; color: white; border: none; padding: 12px 24px;
+      border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Generar iconos PWA</h1>
+  <p>Abrí esta página en el navegador, pulsá el botón y guardá los dos archivos descargados en <code>Main/icons/</code>.</p>
+  <canvas id="c192" width="192" height="192"></canvas>
+  <canvas id="c512" width="512" height="512"></canvas>
+  <button onclick="generateAll()">Descargar iconos</button>
+
+  <script>
+    function drawIcon(canvas) {
+      const s   = canvas.width;
+      const ctx = canvas.getContext('2d');
+      const r   = s * 0.19;
+
+      // Fondo con bordes redondeados
+      const grad = ctx.createLinearGradient(0, 0, s, s);
+      grad.addColorStop(0, '#DC2626');
+      grad.addColorStop(1, '#9F1239');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, s, s, r);
+      ctx.fill();
+
+      // Texto
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `800 ${Math.round(s * 0.33)}px system-ui, sans-serif`;
+      ctx.fillText('SGR', s / 2, s / 2 + s * 0.03);
+
+      // Línea decorativa
+      const lw = s * 0.47;
+      const lh = s * 0.013;
+      const ly = s * 0.67;
+      ctx.fillStyle = 'rgba(255,255,255,0.32)';
+      ctx.beginPath();
+      ctx.roundRect((s - lw) / 2, ly, lw, lh, lh / 2);
+      ctx.fill();
+    }
+
+    function download(canvas, filename) {
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    }
+
+    function generateAll() {
+      drawIcon(document.getElementById('c192'));
+      drawIcon(document.getElementById('c512'));
+      setTimeout(() => {
+        download(document.getElementById('c192'), 'icon-192.png');
+        setTimeout(() => download(document.getElementById('c512'), 'icon-512.png'), 300);
+      }, 100);
+    }
+
+    // Preview al cargar
+    drawIcon(document.getElementById('c192'));
+    drawIcon(document.getElementById('c512'));
+  </script>
+</body>
+</html>
