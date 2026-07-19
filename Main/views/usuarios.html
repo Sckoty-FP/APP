@@ -150,33 +150,38 @@
           ">${u.email}</div>
         </div>
 
-        <!-- Badge rol + acciones -->
+        <!-- Rol + acciones -->
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
-          <span style="
-            font-size:10px; font-weight:700; padding:2px 8px;
-            border-radius:var(--r-full);
-            background:${rolColor}18; color:${rolColor};
-            white-space:nowrap;
-          ">${rolLabel}</span>
-          <div style="display:flex; gap:6px;">
-            <!-- Toggle activo -->
-            <button
-              onclick="window.__toggleActivoUsuario('${u.id}', ${!u.activo})"
-              title="${u.activo ? 'Desactivar' : 'Activar'}"
-              style="
-                width:28px; height:28px; border-radius:var(--r-sm);
-                border:1px solid var(--border-strong);
-                background:var(--surface-2); cursor:pointer;
-                display:flex; align-items:center; justify-content:center;
-                color:${u.activo ? 'var(--danger)' : 'var(--success)'};
-              "
-            >
-              ${u.activo
-                ? `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`
-                : `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
-              }
-            </button>
-          </div>
+          <select
+            onchange="window.__cambiarRolUsuario('${u.id}', this.value)"
+            style="
+              font-size:10px; font-weight:700; padding:3px 6px;
+              border-radius:var(--r-full);
+              background:${rolColor}18; color:${rolColor};
+              border:1px solid ${rolColor}44;
+              cursor:pointer; font-family:var(--font);
+            "
+          >
+            <option value="jefe_equipo" ${u.rol === 'jefe_equipo' ? 'selected' : ''}>Jefe equipo</option>
+            <option value="jefe_zona"   ${u.rol === 'jefe_zona'   ? 'selected' : ''}>Jefe zona</option>
+            <option value="supervisor"  ${u.rol === 'supervisor'  ? 'selected' : ''}>Supervisor</option>
+          </select>
+          <button
+            onclick="window.__toggleActivoUsuario('${u.id}', ${!u.activo})"
+            title="${u.activo ? 'Desactivar' : 'Activar'}"
+            style="
+              width:28px; height:28px; border-radius:var(--r-sm);
+              border:1px solid var(--border-strong);
+              background:var(--surface-2); cursor:pointer;
+              display:flex; align-items:center; justify-content:center;
+              color:${u.activo ? 'var(--danger)' : 'var(--success)'};
+            "
+          >
+            ${u.activo
+              ? `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`
+              : `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+            }
+          </button>
         </div>
       </div>`;
   }
@@ -206,6 +211,16 @@
     if (!confirm(`¿Querés ${accion} este usuario?`)) return;
     try {
       await toggleActivo(id, nuevoActivo);
+      cargar();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  // ── Cambiar rol ──────────────────────────────────────────────
+  window.__cambiarRolUsuario = async function (id, nuevoRol) {
+    try {
+      await cambiarRol(id, nuevoRol);
       cargar();
     } catch (err) {
       alert(err.message);

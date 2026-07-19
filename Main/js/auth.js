@@ -9,6 +9,7 @@
 import { initSupabase, getSupabase } from './supabase.js';
 import { navigate } from './router.js';
 import { iniciarNotificaciones, detenerNotificaciones, getExpedientesConNotif } from './notificaciones.js';
+import { renderNav } from './ui/nav.js';
 
 // ── Estado en memoria ──────────────────────────────────────────
 let _currentUser  = null;   // { id, nombre, email, rol, activo }
@@ -48,6 +49,8 @@ async function loadProfile(authUser) {
 // ── Actualizar UI del header según usuario logueado ────────────
 function updateHeaderUser() {
   if (!_currentUser) return;
+  // Re-renderizar nav con el rol correcto (oculta "Nuevo" para no-supervisores)
+  renderNav(location.hash || '#/expedientes', _currentUser.rol);
 
   const titleEl  = document.getElementById('page-title');
   const actionEl = document.getElementById('header-action');

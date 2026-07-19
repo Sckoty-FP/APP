@@ -103,8 +103,16 @@
     btn.textContent = 'Generando…';
     btn.disabled = true;
     try {
+      // Capturar gráfica de torta (si está renderizada)
+      const canvasDonut = document.getElementById('chart-donut');
+      const chartImg    = canvasDonut ? canvasDonut.toDataURL('image/png') : null;
+
+      // Cargar lista completa de expedientes para el informe
+      const { listarExpedientes } = await import('/js/expedientes.js');
+      const expedientes = await listarExpedientes({ limit: 200 });
+
       const { exportarKPIs } = await import('/js/exportacion.js');
-      await exportarKPIs(_kpisResumen, _kpisTendencia);
+      await exportarKPIs(_kpisResumen, _kpisTendencia, { chartImg, expedientes });
     } finally {
       btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Exportar PDF`;
       btn.disabled = false;

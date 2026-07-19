@@ -41,12 +41,22 @@ const NAV_ITEMS = [
   },
 ];
 
-export function renderNav(activeRoute) {
+// Rutas visibles por rol — supervisor ve todo, el resto no crea expedientes
+const NAV_ROUTES = {
+  supervisor:  ['#/inicio', '#/expedientes', '#/nuevo', '#/estadisticas', '#/perfil'],
+  jefe_zona:   ['#/inicio', '#/expedientes', '#/estadisticas', '#/perfil'],
+  jefe_equipo: ['#/inicio', '#/expedientes', '#/estadisticas', '#/perfil'],
+};
+
+export function renderNav(activeRoute, rol) {
   const nav = document.getElementById('app-nav');
-  const active = activeRoute || '#/inicio';
+  if (!nav) return;
+  const active  = activeRoute || '#/inicio';
+  const allowed = NAV_ROUTES[rol] ?? NAV_ROUTES.supervisor;
+  const items   = NAV_ITEMS.filter(i => allowed.includes(i.route));
   nav.innerHTML = `
     <div class="nav-inner">
-      ${NAV_ITEMS.map(item => `
+      ${items.map(item => `
         <a href="${item.route}"
            data-route="${item.route}"
            class="nav-item${item.route === active ? ' active' : ''}">
