@@ -1,3 +1,128 @@
-<div class="p-6">
-  <p class="text-sm text-gray-400">Listado de expedientes — disponible en la Fase 5.</p>
+<!-- Expedientes — lista con filtros de estado -->
+<div style="padding-bottom: 80px;">
+
+  <!-- Filtros de estado -->
+  <div style="overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: var(--s4) var(--s4) 0;">
+    <div id="exp-filters" style="display: flex; gap: 6px; width: max-content; padding-bottom: var(--s3);">
+      <button class="pill-filter pill-active" data-estado="">Todos</button>
+      <button class="pill-filter" data-estado="pendiente">Pendiente</button>
+      <button class="pill-filter" data-estado="en_gestion">En gestión</button>
+      <button class="pill-filter" data-estado="pendiente_revision">P. revisión</button>
+      <button class="pill-filter" data-estado="rescatada">Rescatada</button>
+      <button class="pill-filter" data-estado="cerrada">Cerrada</button>
+    </div>
+  </div>
+
+  <!-- Lista -->
+  <div id="exp-list" class="card-list">
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+  </div>
+
+  <!-- FAB nuevo — solo supervisor -->
+  <button
+    id="exp-fab"
+    aria-label="Nuevo expediente"
+    style="
+      position: fixed; bottom: 76px; right: 20px;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--brand-gradient);
+      border: none; cursor: pointer;
+      box-shadow: 0 4px 20px var(--brand-shadow);
+      color: white; font-size: 26px; font-weight: 300;
+      display: none; align-items: center; justify-content: center;
+      z-index: 50;
+      transition: transform var(--t-fast), box-shadow var(--t-fast);
+    "
+  >+</button>
+
 </div>
+
+<script>
+(async function () {
+  const { listarExpedientes, ESTADO_LABEL } = await import('/js/expedientes.js');
+  const rol = window.__getCurrentRol?.();
+
+  // FAB — solo supervisor
+  const fab = document.getElementById('exp-fab');
+  if (rol === 'supervisor') {
+    fab.style.display = 'flex';
+    fab.addEventListener('click', () => window.__navigate('#/nuevo'));
+  }
+
+  let estadoActivo = '';
+
+  function tarjeta(e) {
+    const fecha   = new Date(e.fecha_creacion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const tecnico = e.tecnico ? `<span style="color:var(--text-tertiary)"> · ${e.tecnico.nombre}</span>` : '';
+    return `
+      <div class="card card-expediente estado-${e.estado}"
+           role="button" tabindex="0"
+           onclick="window.__navigate('#/expediente?id=${e.id}')"
+           onkeydown="if(event.key==='Enter')window.__navigate('#/expediente?id=${e.id}')">
+        <div class="card-accent"></div>
+        <div class="card-body">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">
+            <div style="flex:1;min-width:0;">
+              <div class="card-num">#${e.mantenimiento}</div>
+              <div class="card-title">${e.instalacion}</div>
+            </div>
+            <span class="badge badge-${e.estado}" style="flex-shrink:0;margin-top:2px;">${ESTADO_LABEL[e.estado]}</span>
+          </div>
+          <div class="card-motivo">${e.motivo}</div>
+          <div class="card-footer">
+            <span class="card-meta">${e.jefe?.nombre ?? '—'}${tecnico}</span>
+            <span class="card-meta">${fecha}</span>
+          </div>
+        </div>
+        <svg class="card-chevron" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </div>`;
+  }
+
+  async function cargar() {
+    const listEl = document.getElementById('exp-list');
+    if (!listEl) return;
+    listEl.innerHTML = `
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>`;
+    try {
+      const exps = await listarExpedientes(estadoActivo ? { estado: estadoActivo } : {});
+      if (!exps.length) {
+        listEl.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+            <div class="empty-title">Sin expedientes</div>
+            <div class="empty-body">No hay expedientes${estadoActivo ? ' con este estado' : ' todavía'}.</div>
+          </div>`;
+        return;
+      }
+      listEl.innerHTML = exps.map(tarjeta).join('');
+    } catch (err) {
+      listEl.innerHTML = `
+        <div class="empty-state">
+          <p style="color:var(--danger);font-size:var(--text-sm);">${err.message}</p>
+        </div>`;
+    }
+  }
+
+  // Filtros
+  document.getElementById('exp-filters')?.addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-estado]');
+    if (!btn) return;
+    document.querySelectorAll('#exp-filters .pill-filter').forEach(b => b.classList.remove('pill-active'));
+    btn.classList.add('pill-active');
+    estadoActivo = btn.dataset.estado;
+    cargar();
+  });
+
+  cargar();
+})();
+</script>

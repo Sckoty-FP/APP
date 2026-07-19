@@ -1,3 +1,142 @@
-<div class="p-6">
-  <p class="text-sm text-gray-400">Nuevo expediente / Importar Excel — disponible en las Fases 5 y 8.</p>
+<!-- Nuevo expediente — solo supervisor -->
+<div style="padding: var(--s4); padding-bottom: 80px; max-width: 560px; margin: 0 auto;">
+
+  <form id="form-nuevo" style="display: flex; flex-direction: column; gap: var(--s5);" novalidate>
+
+    <div class="form-group">
+      <label class="form-label" for="f-instalacion">Instalación <span style="color:var(--danger)">*</span></label>
+      <input id="f-instalacion" class="input" type="text" placeholder="Nombre / dirección de la instalación" required autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="f-mantenimiento">Nº de mantenimiento <span style="color:var(--danger)">*</span></label>
+      <input id="f-mantenimiento" class="input" type="text" placeholder="Código único del mantenimiento" required autocomplete="off" />
+      <span class="form-hint">Debe ser único — se usa para evitar duplicados al importar.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="f-jefe">Jefe de equipo <span style="color:var(--danger)">*</span></label>
+      <select id="f-jefe" class="select" required>
+        <option value="">Cargando…</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="f-tecnico">Técnico</label>
+      <select id="f-tecnico" class="select" disabled>
+        <option value="">— Seleccioná primero el jefe —</option>
+      </select>
+      <span class="form-hint">Opcional. Se filtra por el jefe elegido.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="f-motivo">Motivo de rechazo <span style="color:var(--danger)">*</span></label>
+      <textarea id="f-motivo" class="textarea" placeholder="¿Por qué fue rechazada la PPA?" required></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="f-observaciones">Observaciones</label>
+      <textarea id="f-observaciones" class="textarea" placeholder="Información adicional (opcional)"></textarea>
+    </div>
+
+    <div id="form-error" role="alert" style="display:none; background:var(--danger-bg); border:1px solid var(--danger-border); border-radius:var(--r-md); padding:10px 14px; font-size:var(--text-sm); color:var(--danger-text); font-weight:500;"></div>
+
+    <div style="display: flex; gap: var(--s3);">
+      <button type="button" class="btn btn-secondary" onclick="history.back()">Cancelar</button>
+      <button type="submit" id="btn-guardar" class="btn btn-primary" style="flex:1;">Guardar expediente</button>
+    </div>
+
+  </form>
+
 </div>
+
+<script>
+(async function () {
+  const { listarJefesEquipo, listarTecnicosPorJefe, crearExpediente } = await import('/js/expedientes.js');
+  const user = window.__getCurrentUser?.();
+
+  // Solo supervisor puede crear
+  if (!user || user.rol !== 'supervisor') {
+    document.getElementById('form-nuevo').innerHTML = `
+      <div class="empty-state">
+        <p style="color:var(--danger);font-size:var(--text-sm);">Solo el supervisor puede crear expedientes.</p>
+      </div>`;
+    return;
+  }
+
+  const jefeSelect    = document.getElementById('f-jefe');
+  const tecnicoSelect = document.getElementById('f-tecnico');
+
+  // Cargar jefes de equipo
+  try {
+    const jefes = await listarJefesEquipo();
+    if (!jefes.length) {
+      jefeSelect.innerHTML = '<option value="">No hay jefes de equipo registrados</option>';
+    } else {
+      jefeSelect.innerHTML =
+        '<option value="">Seleccioná un jefe de equipo…</option>' +
+        jefes.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
+    }
+  } catch (err) {
+    jefeSelect.innerHTML = `<option value="">Error: ${err.message}</option>`;
+  }
+
+  // Al cambiar jefe → cargar sus técnicos
+  jefeSelect.addEventListener('change', async () => {
+    const jefeId = jefeSelect.value;
+    tecnicoSelect.disabled = true;
+    tecnicoSelect.innerHTML = '<option value="">Cargando…</option>';
+    if (!jefeId) {
+      tecnicoSelect.innerHTML = '<option value="">— Seleccioná primero el jefe —</option>';
+      return;
+    }
+    try {
+      const ts = await listarTecnicosPorJefe(jefeId);
+      tecnicoSelect.disabled = false;
+      tecnicoSelect.innerHTML =
+        '<option value="">— Sin técnico asignado —</option>' +
+        ts.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
+    } catch (err) {
+      tecnicoSelect.innerHTML = `<option value="">Error: ${err.message}</option>`;
+      tecnicoSelect.disabled = false;
+    }
+  });
+
+  // Submit
+  document.getElementById('form-nuevo').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('form-error');
+    const btn     = document.getElementById('btn-guardar');
+    errorEl.style.display = 'none';
+
+    const instalacion   = document.getElementById('f-instalacion').value.trim();
+    const mantenimiento = document.getElementById('f-mantenimiento').value.trim();
+    const jefe_id       = jefeSelect.value;
+    const tecnico_id    = tecnicoSelect.value || null;
+    const motivo        = document.getElementById('f-motivo').value.trim();
+    const observaciones = document.getElementById('f-observaciones').value.trim() || null;
+
+    if (!instalacion || !mantenimiento || !jefe_id || !motivo) {
+      errorEl.textContent = 'Completá los campos obligatorios (*)';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner spinner-light" style="width:18px;height:18px;"></div> Guardando…';
+
+    try {
+      await crearExpediente({ instalacion, mantenimiento, jefe_id, tecnico_id, motivo, observaciones, creado_por: user.id });
+      window.__navigate('#/expedientes');
+    } catch (err) {
+      const msg = err.message.includes('unique') || err.message.includes('duplicate')
+        ? 'Ya existe un expediente con ese número de mantenimiento.'
+        : err.message;
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = 'Guardar expediente';
+    }
+  });
+})();
+</script>
