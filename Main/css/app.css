@@ -182,15 +182,15 @@ button { font-family: var(--font); cursor: pointer; }
   background: linear-gradient(135deg, var(--chrome-bg) 0%, var(--chrome-bg-2) 100%);
   border-bottom: 1px solid var(--chrome-border);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--s3);
   padding: 0 var(--s4);
-  height: 58px;
+  padding-top: env(safe-area-inset-top, 0px);
+  height: calc(58px + env(safe-area-inset-top, 0px));
   flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 20;
-  /* Sutil ruido/textura para que no sea plano */
   box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 2px 8px rgba(0,0,0,0.2);
 }
 
