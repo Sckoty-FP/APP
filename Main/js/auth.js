@@ -62,7 +62,7 @@ function updateHeaderUser() {
 
   actionEl.innerHTML = `
     <button
-      onclick="window.__authLogout()"
+      onclick="if(confirm('¿Cerrás sesión?'))window.__authLogout()"
       style="
         display:flex;align-items:center;gap:8px;
         background:rgba(255,255,255,0.1);
@@ -186,5 +186,7 @@ export async function initAuth() {
 }
 
 // ── Exponer al HTML para los event handlers inline ────────────
-window.__authLogin  = login;
-window.__authLogout = logout;
+window.__authLogin       = login;
+window.__authLogout      = logout;
+window.__getCurrentUser  = getCurrentUser;
+window.__getCurrentRol   = getCurrentRol;
