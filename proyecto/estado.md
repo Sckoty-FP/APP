@@ -6,7 +6,7 @@
 
 ## Estado actual
 
-**Fase activa:** 8 — Importación Excel (bloqueada hasta tener el archivo real)
+**Fase activa:** 10 — Dashboards y estadísticas
 **Ultima actualizacion:** 2026-07-19
 
 ---
@@ -32,7 +32,7 @@
 | 6 | Comentarios e imagenes | ✅ Verificada con Playwright (jefe_equipo ve input, jefe_zona no) |
 | 7 | Maquina de estados | ✅ Completada — BD rechaza transiciones prohibidas, verificado |
 | 8 | Importacion Excel | Bloqueada (falta Excel real) |
-| 9 | Busqueda y filtros | Pendiente |
+| 9 | Busqueda y filtros | ✅ Completada — filtros combinados en URL, restauración automática |
 | 10 | Dashboards | Pendiente |
 | 11 | PWA y pulido | Pendiente |
 

@@ -1,8 +1,26 @@
-<!-- Expedientes — lista con filtros de estado -->
+<!-- Expedientes — lista con búsqueda y filtros de estado -->
 <div style="padding-bottom: 80px;">
 
+  <!-- Búsqueda -->
+  <div style="padding: var(--s4) var(--s4) 0;">
+    <div style="position:relative;">
+      <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"
+           style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);pointer-events:none;">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+      </svg>
+      <input
+        id="exp-search"
+        class="input"
+        type="search"
+        placeholder="Instalación o nº mantenimiento…"
+        autocomplete="off"
+        style="padding-left:36px;"
+      />
+    </div>
+  </div>
+
   <!-- Filtros de estado -->
-  <div style="overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: var(--s4) var(--s4) 0;">
+  <div style="overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: var(--s3) var(--s4) 0;">
     <div id="exp-filters" style="display: flex; gap: 6px; width: max-content; padding-bottom: var(--s3);">
       <button class="pill-filter pill-active" data-estado="">Todos</button>
       <button class="pill-filter" data-estado="pendiente">Pendiente</button>
@@ -51,7 +69,30 @@
     fab.addEventListener('click', () => window.__navigate('#/nuevo'));
   }
 
-  let estadoActivo = '';
+  // Restaurar filtros desde la URL
+  const params     = window.__getRouteParams?.() ?? new URLSearchParams();
+  let estadoActivo = params.get('estado') ?? '';
+  let busqueda     = params.get('q') ?? '';
+
+  // Aplicar estado inicial al pill activo
+  if (estadoActivo) {
+    document.querySelectorAll('#exp-filters .pill-filter').forEach(b => {
+      b.classList.toggle('pill-active', b.dataset.estado === estadoActivo);
+    });
+  }
+
+  // Aplicar búsqueda inicial al input
+  const searchEl = document.getElementById('exp-search');
+  if (searchEl && busqueda) searchEl.value = busqueda;
+
+  // Actualizar la URL sin recargar la vista (history.replaceState)
+  function actualizarURL() {
+    const p = new URLSearchParams();
+    if (estadoActivo) p.set('estado', estadoActivo);
+    if (busqueda)     p.set('q', busqueda);
+    const qs = p.toString();
+    history.replaceState(null, '', '#/expedientes' + (qs ? '?' + qs : ''));
+  }
 
   function tarjeta(e) {
     const fecha   = new Date(e.fecha_creacion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
@@ -90,7 +131,7 @@
       <div class="skeleton skeleton-card"></div>
       <div class="skeleton skeleton-card"></div>`;
     try {
-      const exps = await listarExpedientes(estadoActivo ? { estado: estadoActivo } : {});
+      const exps = await listarExpedientes({ estado: estadoActivo || undefined, busqueda: busqueda || undefined });
       if (!exps.length) {
         listEl.innerHTML = `
           <div class="empty-state">
@@ -100,7 +141,7 @@
               </svg>
             </div>
             <div class="empty-title">Sin expedientes</div>
-            <div class="empty-body">No hay expedientes${estadoActivo ? ' con este estado' : ' todavía'}.</div>
+            <div class="empty-body">No hay expedientes${estadoActivo || busqueda ? ' con estos filtros' : ' todavía'}.</div>
           </div>`;
         return;
       }
@@ -113,14 +154,26 @@
     }
   }
 
-  // Filtros
+  // Filtros de estado
   document.getElementById('exp-filters')?.addEventListener('click', ev => {
     const btn = ev.target.closest('[data-estado]');
     if (!btn) return;
     document.querySelectorAll('#exp-filters .pill-filter').forEach(b => b.classList.remove('pill-active'));
     btn.classList.add('pill-active');
     estadoActivo = btn.dataset.estado;
+    actualizarURL();
     cargar();
+  });
+
+  // Búsqueda con debounce
+  let debounceTimer;
+  searchEl?.addEventListener('input', () => {
+    busqueda = searchEl.value;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      actualizarURL();
+      cargar();
+    }, 320);
   });
 
   cargar();

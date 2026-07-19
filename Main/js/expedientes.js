@@ -7,7 +7,7 @@ import { getSupabase } from './supabase.js';
 
 // ── Expedientes ────────────────────────────────────────────────
 
-export async function listarExpedientes({ estado } = {}) {
+export async function listarExpedientes({ estado, busqueda } = {}) {
   const sb = getSupabase();
   let q = sb
     .from('expedientes')
@@ -19,6 +19,10 @@ export async function listarExpedientes({ estado } = {}) {
     .order('fecha_creacion', { ascending: false });
 
   if (estado) q = q.eq('estado', estado);
+  if (busqueda) {
+    const t = busqueda.trim();
+    q = q.or(`instalacion.ilike.%${t}%,mantenimiento.ilike.%${t}%`);
+  }
 
   const { data, error } = await q;
   if (error) throw error;
