@@ -32,7 +32,9 @@ export function iniciarNotificaciones() {
         _emitir();
       }
     )
-    .subscribe();
+    .subscribe((status, err) => {
+      console.log('[realtime] estado canal:', status, err ?? '');
+    });
 }
 
 // ── Detener suscripción ─────────────────────────────────────────
