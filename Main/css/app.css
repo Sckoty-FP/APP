@@ -1,0 +1,25 @@
+/*
+ * SGR-PPA — Estilos globales
+ * Los design tokens (colores, tipografía, escala) se definen en la Fase 3.
+ * Este archivo solo contiene lo que Tailwind no cubre.
+ */
+
+/* Safe area para iOS (notch, home bar) */
+.nav-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Garantía de objetivo táctil mínimo — nada por debajo de 44px */
+.touch-min {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Transiciones de vista */
+#app-main {
+  transition: opacity 0.1s ease;
+}
+#app-main.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
