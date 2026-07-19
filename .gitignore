@@ -1,0 +1,13 @@
+# Screenshots de tests
+tests/screenshots/
+
+# Archivos locales de trabajo
+files/
+files.zip
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
