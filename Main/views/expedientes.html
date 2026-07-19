@@ -149,7 +149,12 @@
 
 <script>
 (async function () {
-  const { listarExpedientes, listarJefesEquipo, ESTADO_LABEL } = await import('/js/expedientes.js');
+  const [expMod, notifMod] = await Promise.all([
+    import('/js/expedientes.js'),
+    import('/js/notificaciones.js'),
+  ]);
+  const { listarExpedientes, listarJefesEquipo, ESTADO_LABEL } = expMod;
+  const { getExpedientesConNotif, limpiarNotifExpediente }     = notifMod;
   const rol = window.__getCurrentRol?.();
 
   // FAB — solo supervisor
@@ -297,9 +302,10 @@
   });
 
   // ── Tarjeta expediente ─────────────────────────────────
-  function tarjeta(e) {
+  function tarjeta(e, conNotif = false) {
     const fecha   = new Date(e.fecha_creacion).toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
     const tecnico = e.tecnico ? `<span style="color:var(--text-tertiary)"> · ${e.tecnico.nombre}</span>` : '';
+    const dotNotif = `<span id="card-notif-${e.id}" class="card-notif-dot" style="${conNotif ? '' : 'display:none'}">!</span>`;
     return `
       <div class="card card-expediente estado-${e.estado}"
            role="button" tabindex="0"
@@ -309,7 +315,7 @@
         <div class="card-body">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">
             <div style="flex:1;min-width:0;">
-              <div class="card-num">#${e.mantenimiento}</div>
+              <div class="card-num" style="display:flex;align-items:center;">#${e.mantenimiento}${dotNotif}</div>
               <div class="card-title">${e.instalacion}</div>
             </div>
             <span class="badge badge-${e.estado}" style="flex-shrink:0;margin-top:2px;">${ESTADO_LABEL[e.estado]}</span>
@@ -357,7 +363,8 @@
         return;
       }
       _ultimaLista = exps;
-      listEl.innerHTML = exps.map(tarjeta).join('');
+      const conNotif = getExpedientesConNotif();
+      listEl.innerHTML = exps.map(e => tarjeta(e, conNotif.has(e.id))).join('');
     } catch (err) {
       listEl.innerHTML = `
         <div class="empty-state">
@@ -386,5 +393,15 @@
   });
 
   cargar();
+
+  // ── Badges en tiempo real ──────────────────────────────────
+  document.addEventListener('notif:update', ({ detail }) => {
+    const conNotif = getExpedientesConNotif();
+    // Mostrar/ocultar badge en las cards ya renderizadas
+    document.querySelectorAll('[id^="card-notif-"]').forEach(dot => {
+      const expId = dot.id.replace('card-notif-', '');
+      dot.style.display = conNotif.has(expId) ? '' : 'none';
+    });
+  });
 })();
 </script>

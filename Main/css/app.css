@@ -238,6 +238,23 @@ button { font-family: var(--font); cursor: pointer; }
 
 .header-icon-btn:hover { background: rgba(255,255,255,0.14); color: var(--chrome-text); }
 
+/* Badge ! en cards de expediente con notificación nueva */
+.card-notif-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  font-size: 9px;
+  font-weight: 800;
+  vertical-align: middle;
+  margin-left: 5px;
+  flex-shrink: 0;
+}
+
 /* Badge de notificaciones sobre el botón de campana */
 .notif-btn {
   position: relative;

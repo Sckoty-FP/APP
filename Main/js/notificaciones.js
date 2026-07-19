@@ -65,8 +65,9 @@ export function resetearNotificaciones() {
   _emitir();
 }
 
-// ── Getter ──────────────────────────────────────────────────────
-export function getCount() { return _count; }
+// ── Getters ─────────────────────────────────────────────────────
+export function getCount()               { return _count; }
+export function getExpedientesConNotif() { return new Set(_expConNotif); }
 
 // ── Evento interno ──────────────────────────────────────────────
 function _emitir() {
