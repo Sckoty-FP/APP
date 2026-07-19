@@ -81,15 +81,20 @@
 <script>
 (async function () {
   // ── Imports ────────────────────────────────────────────────
-  const [expMod, comentMod] = await Promise.all([
+  const [expMod, comentMod, notifMod] = await Promise.all([
     import('/js/expedientes.js'),
     import('/js/comentarios.js'),
+    import('/js/notificaciones.js'),
   ]);
   const { obtenerExpediente, listarJefesEquipo, listarTecnicosPorJefe, actualizarExpediente, cambiarEstado, ESTADO_LABEL } = expMod;
   const { listarComentarios, crearComentario, subirFoto, urlFirmada } = comentMod;
+  const { limpiarNotifExpediente } = notifMod;
 
   const params = window.__getRouteParams?.() ?? new URLSearchParams();
   const id     = params.get('id');
+
+  // Limpiar notificaciones de este expediente al abrirlo
+  if (id) limpiarNotifExpediente(id);
   const user   = window.__getCurrentUser?.();
   const wrap   = document.getElementById('exp-detail-wrap');
 

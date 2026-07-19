@@ -8,6 +8,7 @@
 
 import { initSupabase, getSupabase } from './supabase.js';
 import { navigate } from './router.js';
+import { iniciarNotificaciones, detenerNotificaciones } from './notificaciones.js';
 
 // ── Estado en memoria ──────────────────────────────────────────
 let _currentUser  = null;   // { id, nombre, email, rol, activo }
@@ -62,6 +63,17 @@ function updateHeaderUser() {
 
   actionEl.innerHTML = `
     <button
+      id="btn-notif"
+      class="header-icon-btn notif-btn"
+      aria-label="Notificaciones"
+      style="cursor:pointer; border:none;"
+      onclick="window.__navigate('#/expedientes')"
+    >
+      <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+      </svg>
+    </button>
+    <button
       onclick="if(confirm('¿Cerrás sesión?'))window.__authLogout()"
       style="
         display:flex;align-items:center;gap:8px;
@@ -87,6 +99,27 @@ function updateHeaderUser() {
       </span>
     </button>
   `;
+
+  // Escuchar actualizaciones de notificaciones
+  document.addEventListener('notif:update', ({ detail }) => {
+    const badge = document.getElementById('notif-badge');
+    const btn   = document.getElementById('btn-notif');
+    if (!btn) return;
+
+    if (detail.count > 0) {
+      if (!badge) {
+        const b = document.createElement('span');
+        b.id        = 'notif-badge';
+        b.className = 'notif-badge';
+        b.textContent = detail.count > 99 ? '99+' : detail.count;
+        btn.appendChild(b);
+      } else {
+        badge.textContent = detail.count > 99 ? '99+' : detail.count;
+      }
+    } else {
+      badge?.remove();
+    }
+  });
 }
 
 // ── Mostrar / ocultar shell según ruta ─────────────────────────
@@ -113,12 +146,14 @@ export async function login(email, password) {
   await loadProfile(data.user);
   updateHeaderUser();
   setShellVisible(true);
+  iniciarNotificaciones();
   redirectByRol(_currentUser.rol);
 }
 
 // ── Logout ─────────────────────────────────────────────────────
 export async function logout() {
   const sb = getSupabase();
+  detenerNotificaciones();
   await sb.auth.signOut();
   _currentUser = null;
   setShellVisible(false);
@@ -153,6 +188,7 @@ export async function initAuth() {
           await loadProfile(session.user);
           updateHeaderUser();
           setShellVisible(true);
+          iniciarNotificaciones();
           // Solo redirigir si estamos en login
           if (location.hash === '#/login' || location.hash === '') {
             redirectByRol(_currentUser.rol);
@@ -179,6 +215,7 @@ export async function initAuth() {
     await loadProfile(session.user);
     updateHeaderUser();
     setShellVisible(true);
+    iniciarNotificaciones();
   } catch (err) {
     console.error('[auth]', err.message);
     await sb.auth.signOut();
