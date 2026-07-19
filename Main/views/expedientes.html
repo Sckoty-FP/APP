@@ -1,6 +1,25 @@
 <!-- Expedientes — lista con búsqueda y filtros -->
 <div style="padding-bottom: 80px;">
 
+  <!-- Barra superior: búsqueda + filtros + exportar -->
+  <!-- Exportar PDF (oculto hasta que cargue la lista, visible solo supervisor/jefe_zona) -->
+  <div id="export-bar" style="display:none; padding: var(--s3) var(--s4) 0; justify-content:flex-end;">
+    <button id="btn-exportar-pdf" style="
+      height:36px; padding:0 14px;
+      border-radius:var(--r-md);
+      border:1.5px solid var(--border-strong);
+      background:var(--surface); color:var(--text-secondary);
+      font-size:var(--text-xs); font-weight:var(--weight-semi);
+      cursor:pointer; display:flex; align-items:center; gap:6px;
+      font-family:var(--font); transition:all var(--t-fast);
+    ">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+      </svg>
+      Exportar PDF
+    </button>
+  </div>
+
   <!-- Búsqueda + botón filtros -->
   <div style="padding: var(--s4) var(--s4) 0; display:flex; gap:var(--s2);">
     <div style="position:relative; flex:1;">
@@ -138,6 +157,32 @@
   if (rol === 'supervisor') {
     fab.style.display = 'flex';
     fab.addEventListener('click', () => window.__navigate('#/nuevo'));
+  }
+
+  // Exportar PDF — supervisor y jefe_zona
+  let _ultimaLista = [];
+  if (rol === 'supervisor' || rol === 'jefe_zona') {
+    const exportBar = document.getElementById('export-bar');
+    if (exportBar) exportBar.style.display = 'flex';
+    document.getElementById('btn-exportar-pdf')?.addEventListener('click', async () => {
+      if (!_ultimaLista.length) return;
+      const btn = document.getElementById('btn-exportar-pdf');
+      btn.textContent = 'Generando…';
+      btn.disabled = true;
+      try {
+        const { exportarExpedientes } = await import('/js/exportacion.js');
+        const filtrosDesc = [
+          estadoActivo && `Estado: ${ESTADO_LABEL[estadoActivo] ?? estadoActivo}`,
+          busqueda     && `Búsqueda: "${busqueda}"`,
+          jefeId       && `Jefe filtrado`,
+          (fechaDesde || fechaHasta) && `Periodo: ${fechaDesde || '…'} — ${fechaHasta || '…'}`,
+        ].filter(Boolean).join(' · ') || null;
+        await exportarExpedientes(_ultimaLista, filtrosDesc);
+      } finally {
+        btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Exportar PDF`;
+        btn.disabled = false;
+      }
+    });
   }
 
   // ── Restaurar filtros desde URL ─────────────────────────
@@ -311,6 +356,7 @@
           </div>`;
         return;
       }
+      _ultimaLista = exps;
       listEl.innerHTML = exps.map(tarjeta).join('');
     } catch (err) {
       listEl.innerHTML = `

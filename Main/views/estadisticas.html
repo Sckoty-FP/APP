@@ -1,6 +1,24 @@
 <!-- Estadísticas — KPIs y gráficos -->
 <div style="padding: var(--s4); padding-bottom: 80px;">
 
+  <!-- Botón exportar -->
+  <div style="display:flex; justify-content:flex-end; margin-bottom:var(--s3);">
+    <button id="btn-exportar-stats" style="
+      height:36px; padding:0 14px;
+      border-radius:var(--r-md);
+      border:1.5px solid var(--border-strong);
+      background:var(--surface); color:var(--text-secondary);
+      font-size:var(--text-xs); font-weight:var(--weight-semi);
+      cursor:pointer; display:flex; align-items:center; gap:6px;
+      font-family:var(--font); transition:all var(--t-fast);
+    ">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+      </svg>
+      Exportar PDF
+    </button>
+  </div>
+
   <!-- Grid KPIs -->
   <div id="kpi-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); margin-bottom:var(--s5);">
     <div class="skeleton" style="height:88px; border-radius:var(--r-lg);"></div>
@@ -75,12 +93,33 @@
     { key: 'cerrada',       label: 'Cerrada',     color: '#64748B' },
   ];
 
+  let _kpisResumen   = null;
+  let _kpisTendencia = null;
+
+  // Botón exportar
+  document.getElementById('btn-exportar-stats')?.addEventListener('click', async () => {
+    if (!_kpisResumen) return;
+    const btn = document.getElementById('btn-exportar-stats');
+    btn.textContent = 'Generando…';
+    btn.disabled = true;
+    try {
+      const { exportarKPIs } = await import('/js/exportacion.js');
+      await exportarKPIs(_kpisResumen, _kpisTendencia);
+    } finally {
+      btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Exportar PDF`;
+      btn.disabled = false;
+    }
+  });
+
   try {
     const [resumen, tendencia] = await Promise.all([
       obtenerKpiResumen(),
       obtenerKpiTendencia(6),
       loadChartJs(),
     ]);
+
+    _kpisResumen   = resumen;
+    _kpisTendencia = tendencia;
 
     const activos    = (resumen.pendiente || 0) + (resumen.en_gestion || 0) + (resumen.pend_revision || 0);
     const finalizados = (resumen.rescatada || 0) + (resumen.cerrada || 0);
