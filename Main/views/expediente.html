@@ -220,15 +220,20 @@
   }
 
   // ── Máquina de estados ─────────────────────────────────────
-  const TRANSICIONES = {
-    pendiente:          { supervisor: ['en_gestion'],              jefe_equipo: ['en_gestion'] },
-    en_gestion:         { supervisor: ['pendiente_revision'],       jefe_equipo: ['pendiente_revision'] },
-    pendiente_revision: { supervisor: ['rescatada', 'cerrada'],    jefe_equipo: [] },
-    rescatada:          { supervisor: [],                          jefe_equipo: [] },
-    cerrada:            { supervisor: [],                          jefe_equipo: [] },
+  const TODOS_ESTADOS  = ['pendiente', 'en_gestion', 'pendiente_revision', 'rescatada', 'cerrada'];
+  const TERMINALES     = new Set(['rescatada', 'cerrada']);
+
+  // Jefe de equipo: solo avance lineal
+  const TRANSICIONES_JEFE = {
+    pendiente:          ['en_gestion'],
+    en_gestion:         ['pendiente_revision'],
+    pendiente_revision: [],
+    rescatada:          [],
+    cerrada:            [],
   };
 
   const ACCION_LABEL = {
+    pendiente:          'Volver a pendiente',
     en_gestion:         'Marcar en gestión',
     pendiente_revision: 'Solicitar revisión',
     rescatada:          'Marcar como rescatada',
@@ -236,10 +241,11 @@
   };
 
   const ACCION_COLOR = {
+    pendiente:          'var(--pendiente-accent)',
     en_gestion:         'var(--gestion-accent)',
     pendiente_revision: 'var(--revision-accent)',
     rescatada:          'var(--rescatada-accent)',
-    cerrada:            'var(--text-tertiary)',
+    cerrada:            'var(--cerrada-accent)',
   };
 
   function renderEstado(exp) {
@@ -247,9 +253,34 @@
     if (!seccion) return;
 
     const rol = user?.rol;
-    const permitidos = TRANSICIONES[exp.estado]?.[rol] ?? [];
 
-    if (!permitidos.length) {
+    // Estado terminal — nadie puede salir
+    if (TERMINALES.has(exp.estado)) {
+      seccion.style.display = 'block';
+      const esRescatada = exp.estado === 'rescatada';
+      seccion.innerHTML = `
+        <div style="
+          padding:var(--s3) var(--s4);
+          background:${esRescatada ? 'var(--rescatada-bg)' : 'var(--cerrada-bg)'};
+          border:1px solid ${esRescatada ? 'var(--rescatada-border)' : 'var(--cerrada-border)'};
+          border-radius:var(--r-md);
+          font-size:var(--text-xs);font-weight:600;
+          color:${esRescatada ? 'var(--rescatada-text)' : 'var(--cerrada-text)'};
+        ">
+          Expediente ${ESTADO_LABEL[exp.estado].toLowerCase()} — el estado no puede cambiar.
+        </div>`;
+      return;
+    }
+
+    // Opciones según rol
+    let opciones = [];
+    if (rol === 'supervisor') {
+      opciones = TODOS_ESTADOS.filter(e => e !== exp.estado);
+    } else if (rol === 'jefe_equipo') {
+      opciones = TRANSICIONES_JEFE[exp.estado] ?? [];
+    }
+
+    if (!opciones.length) {
       seccion.style.display = 'none';
       return;
     }
@@ -259,10 +290,10 @@
       <div class="card" style="padding:var(--s4);">
         <div style="font-size:var(--text-xs);font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:var(--s3);">Cambiar estado</div>
         <div id="estado-btns" style="display:flex;flex-direction:column;gap:var(--s2);">
-          ${permitidos.map(est => `
+          ${opciones.map(est => `
             <button
               class="btn btn-secondary"
-              onclick="window.__cambiarEstado('${exp.id}', '${est}')"
+              onclick="${TERMINALES.has(est) ? `window.__confirmarEstado('${exp.id}','${est}')` : `window.__cambiarEstado('${exp.id}','${est}')`}"
               data-estado="${est}"
               style="justify-content:flex-start;gap:var(--s2);border-left:3px solid ${ACCION_COLOR[est]};"
             >
@@ -275,17 +306,27 @@
     `;
   }
 
+  // Confirm obligatorio antes de pasar a estado terminal
+  window.__confirmarEstado = function (expedienteId, nuevoEstado) {
+    const label = ESTADO_LABEL[nuevoEstado];
+    if (confirm(`¿Marcás este expediente como "${label}"?\n\nEsta acción es irreversible — el estado no podrá cambiar más.`)) {
+      window.__cambiarEstado(expedienteId, nuevoEstado);
+    }
+  };
+
   window.__cambiarEstado = async function (expedienteId, nuevoEstado) {
-    const btns = document.querySelectorAll('#estado-btns button');
+    const btns    = document.querySelectorAll('#estado-btns button');
     const errorEl = document.getElementById('estado-error');
     btns.forEach(b => { b.disabled = true; b.style.opacity = '0.6'; });
-    errorEl.style.display = 'none';
+    if (errorEl) errorEl.style.display = 'none';
     try {
       await cambiarEstado(expedienteId, nuevoEstado);
       window.__navigate(`#/expediente?id=${expedienteId}`);
     } catch (err) {
-      errorEl.textContent = err.message;
-      errorEl.style.display = 'block';
+      if (errorEl) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      }
       btns.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
     }
   };
