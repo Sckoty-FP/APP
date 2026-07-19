@@ -6,7 +6,7 @@
 
 ## Estado actual
 
-**Fase activa:** 8 — Importación Excel (bloqueada — esperando archivo)
+**Fase activa:** v2/1 — Gestión de usuarios (implementada, pendiente deploy SQL + test)
 **Ultima actualizacion:** 2026-07-19
 
 ---

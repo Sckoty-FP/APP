@@ -30,6 +30,36 @@
       <div id="perfil-info-rows"></div>
     </div>
 
+    <!-- Gestión de usuarios (solo supervisor) -->
+    <div id="perfil-admin-section" style="display:none;">
+      <div style="font-size:var(--text-xs); font-weight:var(--weight-semi); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:var(--s2);">
+        Administración
+      </div>
+      <button
+        onclick="window.__navigate('#/usuarios')"
+        style="
+          width:100%; padding:14px var(--s4); border-radius:var(--r-lg);
+          background:var(--surface); border:1px solid var(--border-strong);
+          color:var(--text-primary); font-size:var(--text-sm);
+          font-weight:var(--weight-semi); cursor:pointer;
+          font-family:var(--font); display:flex; align-items:center; justify-content:space-between;
+          transition:background var(--t-fast);
+        "
+        onmouseover="this.style.background='var(--surface-2)'"
+        onmouseout="this.style.background='var(--surface)'"
+      >
+        <div style="display:flex; align-items:center; gap:10px;">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="color:var(--brand);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Gestionar usuarios
+        </div>
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="color:var(--text-tertiary);">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+
     <!-- Logout -->
     <button
       onclick="if(confirm('¿Cerrás sesión?')) window.__authLogout()"
@@ -75,6 +105,12 @@
         <span style="font-size:var(--text-sm); color:var(--text-tertiary); font-weight:var(--weight-medium);">${label}</span>
         <span style="font-size:var(--text-sm); color:var(--text-primary); font-weight:var(--weight-semi);">${value}</span>
       </div>`;
+  }
+
+  // Sección admin — solo supervisor
+  if (user.rol === 'supervisor') {
+    const adminSection = document.getElementById('perfil-admin-section');
+    if (adminSection) adminSection.style.display = 'block';
   }
 
   const rows = document.getElementById('perfil-info-rows');

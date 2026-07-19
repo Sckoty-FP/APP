@@ -30,3 +30,7 @@ export function getSupabase() {
   if (!supabase) throw new Error('[supabase] Cliente no inicializado. Llama a initSupabase() primero.');
   return supabase;
 }
+
+export function getSupabaseCredentials() {
+  return { url: SUPABASE_URL, key: SUPABASE_ANON_KEY };
+}

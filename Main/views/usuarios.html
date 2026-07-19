@@ -1,0 +1,280 @@
+<!-- Gestión de usuarios — solo supervisor -->
+<div style="padding-bottom: 80px;">
+
+  <!-- Cabecera de sección -->
+  <div style="padding: var(--s4) var(--s4) var(--s3);">
+    <div style="display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-size:var(--text-xs); font-weight:var(--weight-semi); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em;">
+        Usuarios del sistema
+      </div>
+      <button
+        id="btn-nuevo-usuario"
+        style="
+          height:36px; padding:0 14px;
+          border-radius:var(--r-md);
+          background:var(--brand-gradient);
+          border:none; cursor:pointer;
+          color:white; font-size:var(--text-sm); font-weight:var(--weight-semi);
+          font-family:var(--font); display:flex; align-items:center; gap:6px;
+          box-shadow:0 2px 8px var(--brand-shadow);
+        "
+      >
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nuevo usuario
+      </button>
+    </div>
+  </div>
+
+  <!-- Lista de usuarios -->
+  <div id="usuarios-list" style="padding: 0 var(--s4); display:flex; flex-direction:column; gap:var(--s2);">
+    <div class="skeleton" style="height:72px; border-radius:var(--r-lg);"></div>
+    <div class="skeleton" style="height:72px; border-radius:var(--r-lg);"></div>
+    <div class="skeleton" style="height:72px; border-radius:var(--r-lg);"></div>
+  </div>
+
+  <!-- Panel crear usuario (oculto inicialmente) -->
+  <div id="panel-crear" style="
+    position:fixed; inset:0; z-index:100;
+    background:rgba(0,0,0,0.5);
+    display:none; align-items:flex-end; justify-content:center;
+  ">
+    <div style="
+      width:100%; max-width:448px;
+      background:var(--surface-2);
+      border-radius:var(--r-xl) var(--r-xl) 0 0;
+      padding:var(--s5) var(--s4) calc(var(--s5) + env(safe-area-inset-bottom, 0px));
+      box-shadow:0 -8px 32px rgba(0,0,0,0.18);
+    ">
+      <div style="
+        width:36px; height:4px; border-radius:2px;
+        background:var(--border-strong); margin:0 auto var(--s4);
+      "></div>
+
+      <div style="font-size:var(--text-md); font-weight:var(--weight-bold); color:var(--text-primary); margin-bottom:var(--s4);">
+        Nuevo usuario
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:var(--s3);">
+        <div>
+          <label class="label">Nombre completo</label>
+          <input id="nu-nombre" type="text" class="input" placeholder="Nombre Apellido" autocomplete="off" />
+        </div>
+        <div>
+          <label class="label">Correo electrónico</label>
+          <input id="nu-email" type="email" class="input" placeholder="usuario@verisure.es" autocomplete="off" />
+        </div>
+        <div>
+          <label class="label">Contraseña temporal</label>
+          <input id="nu-password" type="text" class="input" placeholder="Mínimo 6 caracteres" autocomplete="off" />
+        </div>
+        <div>
+          <label class="label">Rol</label>
+          <select id="nu-rol" class="select" style="width:100%;">
+            <option value="jefe_equipo">Jefe de equipo</option>
+            <option value="jefe_zona">Jefe de zona</option>
+            <option value="supervisor">Supervisor</option>
+          </select>
+        </div>
+
+        <div id="nu-error" style="display:none; color:var(--danger); font-size:var(--text-sm);"></div>
+
+        <div style="display:flex; gap:var(--s2); margin-top:var(--s1);">
+          <button id="btn-cancelar-crear" style="
+            flex:1; height:44px; border-radius:var(--r-md);
+            border:1.5px solid var(--border-strong);
+            background:var(--surface); color:var(--text-secondary);
+            font-size:var(--text-sm); font-weight:var(--weight-semi);
+            font-family:var(--font); cursor:pointer;
+          ">Cancelar</button>
+          <button id="btn-confirmar-crear" style="
+            flex:2; height:44px; border-radius:var(--r-md);
+            border:none; background:var(--brand-gradient);
+            color:white; font-size:var(--text-sm); font-weight:var(--weight-semi);
+            font-family:var(--font); cursor:pointer;
+            box-shadow:0 2px 8px var(--brand-shadow);
+          ">Crear usuario</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(async function () {
+  const { listarUsuarios, crearUsuario, toggleActivo, cambiarRol, ROL_LABEL } =
+    await import('/js/usuarios.js');
+
+  const ROL_BADGE_COLOR = {
+    supervisor:  'var(--brand)',
+    jefe_zona:   '#7c3aed',
+    jefe_equipo: '#0891b2',
+  };
+
+  // ── Tarjeta de usuario ──────────────────────────────────────
+  function tarjeta(u) {
+    const initials = u.nombre.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+    const rolColor  = ROL_BADGE_COLOR[u.rol] || 'var(--text-tertiary)';
+    const rolLabel  = ROL_LABEL[u.rol] || u.rol;
+
+    return `
+      <div style="
+        background:var(--surface);
+        border:1px solid var(--border);
+        border-radius:var(--r-lg);
+        padding:var(--s3) var(--s4);
+        display:flex; align-items:center; gap:var(--s3);
+        opacity:${u.activo ? 1 : 0.5};
+      ">
+        <!-- Avatar -->
+        <div style="
+          width:40px; height:40px; border-radius:50%; flex-shrink:0;
+          background:${rolColor}22;
+          border:1.5px solid ${rolColor}44;
+          display:flex; align-items:center; justify-content:center;
+          font-size:var(--text-sm); font-weight:var(--weight-bold);
+          color:${rolColor};
+        ">${initials}</div>
+
+        <!-- Info -->
+        <div style="flex:1; min-width:0;">
+          <div style="
+            font-size:var(--text-sm); font-weight:var(--weight-semi);
+            color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+          ">${u.nombre}</div>
+          <div style="
+            font-size:var(--text-xs); color:var(--text-tertiary);
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+          ">${u.email}</div>
+        </div>
+
+        <!-- Badge rol + acciones -->
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+          <span style="
+            font-size:10px; font-weight:700; padding:2px 8px;
+            border-radius:var(--r-full);
+            background:${rolColor}18; color:${rolColor};
+            white-space:nowrap;
+          ">${rolLabel}</span>
+          <div style="display:flex; gap:6px;">
+            <!-- Toggle activo -->
+            <button
+              onclick="window.__toggleActivoUsuario('${u.id}', ${!u.activo})"
+              title="${u.activo ? 'Desactivar' : 'Activar'}"
+              style="
+                width:28px; height:28px; border-radius:var(--r-sm);
+                border:1px solid var(--border-strong);
+                background:var(--surface-2); cursor:pointer;
+                display:flex; align-items:center; justify-content:center;
+                color:${u.activo ? 'var(--danger)' : 'var(--success)'};
+              "
+            >
+              ${u.activo
+                ? `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`
+                : `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+              }
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── Cargar lista ─────────────────────────────────────────────
+  async function cargar() {
+    const listEl = document.getElementById('usuarios-list');
+    if (!listEl) return;
+    try {
+      const usuarios = await listarUsuarios();
+      if (!usuarios.length) {
+        listEl.innerHTML = `<div class="empty-state"><div class="empty-title">Sin usuarios</div></div>`;
+        return;
+      }
+      listEl.innerHTML = usuarios.map(tarjeta).join('');
+    } catch (err) {
+      const listEl2 = document.getElementById('usuarios-list');
+      if (listEl2) listEl2.innerHTML = `<div class="empty-state"><p style="color:var(--danger);font-size:var(--text-sm);">${err.message}</p></div>`;
+    }
+  }
+
+  cargar();
+
+  // ── Toggle activo ────────────────────────────────────────────
+  window.__toggleActivoUsuario = async function (id, nuevoActivo) {
+    const accion = nuevoActivo ? 'activar' : 'desactivar';
+    if (!confirm(`¿Querés ${accion} este usuario?`)) return;
+    try {
+      await toggleActivo(id, nuevoActivo);
+      cargar();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  // ── Panel crear ──────────────────────────────────────────────
+  const panel = document.getElementById('panel-crear');
+
+  document.getElementById('btn-nuevo-usuario').addEventListener('click', () => {
+    panel.style.display = 'flex';
+  });
+
+  document.getElementById('btn-cancelar-crear').addEventListener('click', () => {
+    panel.style.display = 'none';
+    limpiarFormulario();
+  });
+
+  panel.addEventListener('click', e => {
+    if (e.target === panel) {
+      panel.style.display = 'none';
+      limpiarFormulario();
+    }
+  });
+
+  function limpiarFormulario() {
+    document.getElementById('nu-nombre').value   = '';
+    document.getElementById('nu-email').value    = '';
+    document.getElementById('nu-password').value = '';
+    document.getElementById('nu-rol').value      = 'jefe_equipo';
+    mostrarError('');
+  }
+
+  function mostrarError(msg) {
+    const el = document.getElementById('nu-error');
+    el.textContent   = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  document.getElementById('btn-confirmar-crear').addEventListener('click', async () => {
+    const nombre   = document.getElementById('nu-nombre').value.trim();
+    const email    = document.getElementById('nu-email').value.trim();
+    const password = document.getElementById('nu-password').value;
+    const rol      = document.getElementById('nu-rol').value;
+
+    if (!nombre || !email || !password) {
+      mostrarError('Completá todos los campos.');
+      return;
+    }
+    if (password.length < 6) {
+      mostrarError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-confirmar-crear');
+    btn.textContent = 'Creando…';
+    btn.disabled = true;
+
+    try {
+      await crearUsuario({ nombre, email, password, rol });
+      panel.style.display = 'none';
+      limpiarFormulario();
+      cargar();
+    } catch (err) {
+      mostrarError(err.message);
+    } finally {
+      btn.textContent = 'Crear usuario';
+      btn.disabled = false;
+    }
+  });
+})();
+</script>

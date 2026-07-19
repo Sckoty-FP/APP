@@ -4,7 +4,7 @@
  * Rutas protegidas: todo lo demás
  */
 
-import { isLoggedIn, setShellVisible } from './auth.js';
+import { isLoggedIn, setShellVisible, getCurrentRol } from './auth.js';
 import { updateNavActive } from './ui/nav.js';
 
 const PUBLIC_ROUTES = new Set(['#/login']);
@@ -17,6 +17,7 @@ const ROUTES = {
   '#/nuevo':         { view: 'nuevo',         title: 'Nuevo expediente',  navActive: '#/expedientes' },
   '#/estadisticas':  { view: 'estadisticas',  title: 'Estadísticas' },
   '#/perfil':        { view: 'perfil',        title: 'Perfil' },
+  '#/usuarios':      { view: 'usuarios',      title: 'Usuarios',          navActive: '#/perfil', rol: 'supervisor' },
   '#/estilos':       { view: 'estilos',       title: 'Sistema visual' },  // solo dev
 };
 
@@ -47,6 +48,12 @@ async function loadView(rawHash) {
 
   // Guard: ya autenticado intenta ir al login → volver atrás
   if (isPublic && isLoggedIn()) {
+    navigate(DEFAULT_AUTH_ROUTE);
+    return;
+  }
+
+  // Guard: ruta restringida por rol
+  if (route.rol && getCurrentRol() !== route.rol) {
     navigate(DEFAULT_AUTH_ROUTE);
     return;
   }
