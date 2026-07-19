@@ -6,7 +6,7 @@
 
 ## Estado actual
 
-**Fase activa:** v2/1 — Gestión de usuarios (implementada, pendiente deploy SQL + test)
+**Fase activa:** v2 completada (Fases 1-3). v2/4 Excel bloqueada esperando archivo.
 **Ultima actualizacion:** 2026-07-19
 
 ---
