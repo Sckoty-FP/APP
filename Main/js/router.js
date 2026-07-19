@@ -1,8 +1,10 @@
 /**
  * Router por hash.
- * Rutas: #/inicio · #/expedientes · #/nuevo · #/estadisticas · #/perfil
+ * Rutas: #/inicio · #/expedientes · #/nuevo · #/estadisticas · #/perfil · #/estilos
  * Guards de rol se añaden en la Fase 4.
  */
+
+import { updateNavActive } from './ui/nav.js';
 
 const ROUTES = {
   '#/inicio':        { view: 'inicio',        title: 'Inicio' },
@@ -10,6 +12,7 @@ const ROUTES = {
   '#/nuevo':         { view: 'nuevo',         title: 'Nuevo expediente' },
   '#/estadisticas':  { view: 'estadisticas',  title: 'Estadísticas' },
   '#/perfil':        { view: 'perfil',        title: 'Perfil' },
+  '#/estilos':       { view: 'estilos',       title: 'Sistema visual' },  // solo dev
 };
 
 const DEFAULT_ROUTE = '#/inicio';
@@ -28,24 +31,14 @@ async function loadView(hash) {
     main.innerHTML = await res.text();
   } catch (err) {
     main.innerHTML = `
-      <div class="p-6 text-center">
-        <p class="text-sm text-red-500">${err.message}</p>
+      <div class="empty-state">
+        <p style="color:var(--danger); font-size:var(--text-sm);">${err.message}</p>
       </div>`;
   } finally {
     main.classList.remove('loading');
   }
 
-  updateNav(hash || DEFAULT_ROUTE);
-}
-
-function updateNav(activeHash) {
-  document.querySelectorAll('[data-route]').forEach(el => {
-    const isActive = el.dataset.route === activeHash;
-    el.querySelector('.nav-icon').classList.toggle('text-blue-600', isActive);
-    el.querySelector('.nav-icon').classList.toggle('text-gray-400', !isActive);
-    el.querySelector('.nav-label').classList.toggle('text-blue-600', isActive);
-    el.querySelector('.nav-label').classList.toggle('text-gray-400', !isActive);
-  });
+  updateNavActive(hash || DEFAULT_ROUTE);
 }
 
 export function navigate(hash) {

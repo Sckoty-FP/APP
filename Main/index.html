@@ -8,30 +8,42 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="SGR-PPA" />
   <title>SGR-PPA</title>
+
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="css/app.css" />
+
+  <!-- Fuente -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Tailwind CDN (se compila en Fase 11) -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Sistema de diseño propio -->
+  <link rel="stylesheet" href="css/app.css" />
 </head>
-<body class="bg-gray-50 text-gray-900 antialiased">
+<body>
 
-  <div id="app" class="flex flex-col h-screen max-w-lg mx-auto">
+  <div id="app" style="display:flex; flex-direction:column; height:100vh; max-width:448px; margin:0 auto;">
 
-    <header id="app-header"
-      class="flex-shrink-0 bg-white border-b border-gray-100 px-4 h-14 flex items-center">
-      <h1 id="page-title" class="text-base font-semibold text-gray-900">SGR-PPA</h1>
+    <header id="app-header">
+      <h1 id="page-title">SGR-PPA</h1>
+      <div class="header-action" id="header-action"></div>
     </header>
 
-    <main id="app-main" class="flex-1 overflow-y-auto">
-      <div class="flex items-center justify-center h-full">
-        <p class="text-sm text-gray-400">Cargando...</p>
+    <main id="app-main" style="flex:1; overflow-y:auto;">
+      <div class="empty-state">
+        <div class="spinner"></div>
       </div>
     </main>
 
-    <nav id="app-nav"
-      class="flex-shrink-0 bg-white border-t border-gray-100 nav-safe-bottom">
+    <nav id="app-nav" class="nav-safe-bottom"
+      style="background:var(--surface); border-top:1px solid var(--border);">
     </nav>
 
   </div>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
 
   <script type="module" src="js/app.js"></script>
 </body>

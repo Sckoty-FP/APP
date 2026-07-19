@@ -1,0 +1,225 @@
+<!-- views/estilos.html — Sistema visual SGR-PPA (solo desarrollo) -->
+<div style="padding-bottom: 80px;">
+
+  <!-- ── Badges de estado ────────────────────────────────── -->
+  <p class="section-title">Estados</p>
+  <div style="display:flex; flex-wrap:wrap; gap:8px; padding:0 16px 16px;">
+    <span class="badge badge-pendiente">Pendiente</span>
+    <span class="badge badge-en_gestion">En gestión</span>
+    <span class="badge badge-pendiente_revision">Pendiente revisión</span>
+    <span class="badge badge-rescatada">Rescatada</span>
+    <span class="badge badge-cerrada">Cerrada</span>
+  </div>
+
+  <!-- ── Tarjetas de expediente ─────────────────────────── -->
+  <p class="section-title">Tarjetas de expediente</p>
+  <div class="card-list">
+
+    <a href="#" class="card card-expediente estado-pendiente">
+      <div class="card-accent"></div>
+      <div class="card-body">
+        <div class="card-num">INS-001 · MNT-2024-001</div>
+        <div class="card-title">Central de incendios sin comunicación</div>
+        <div class="card-motivo">Módulo GSM defectuoso — sin señal desde el 12/01</div>
+        <div class="card-footer">
+          <span class="badge badge-pendiente">Pendiente</span>
+          <span class="card-meta">Luis Pérez · 3 días</span>
+        </div>
+      </div>
+      <svg class="card-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+
+    <a href="#" class="card card-expediente estado-en_gestion">
+      <div class="card-accent"></div>
+      <div class="card-body">
+        <div class="card-num">INS-003 · MNT-2024-003</div>
+        <div class="card-title">Detector de humo sin respuesta</div>
+        <div class="card-motivo">Sala de máquinas — revisión pendiente</div>
+        <div class="card-footer">
+          <span class="badge badge-en_gestion">En gestión</span>
+          <span class="card-meta">Marta Sánchez · 1 día</span>
+        </div>
+      </div>
+      <svg class="card-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+
+    <a href="#" class="card card-expediente estado-pendiente_revision">
+      <div class="card-accent"></div>
+      <div class="card-body">
+        <div class="card-num">INS-007 · MNT-2024-007</div>
+        <div class="card-title">Señalización de emergencia deteriorada</div>
+        <div class="card-motivo">Reemplazadas 4 señales — esperando validación</div>
+        <div class="card-footer">
+          <span class="badge badge-pendiente_revision">Pendiente revisión</span>
+          <span class="card-meta">Roberto López · hoy</span>
+        </div>
+      </div>
+      <svg class="card-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+
+    <a href="#" class="card card-expediente estado-rescatada">
+      <div class="card-accent"></div>
+      <div class="card-body">
+        <div class="card-num">INS-011 · MNT-2024-011</div>
+        <div class="card-title">Batería principal agotada</div>
+        <div class="card-motivo">Batería reemplazada y probada con éxito</div>
+        <div class="card-footer">
+          <span class="badge badge-rescatada">Rescatada</span>
+          <span class="card-meta">Luis Pérez · 15/01</span>
+        </div>
+      </div>
+      <svg class="card-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+
+    <a href="#" class="card card-expediente estado-cerrada">
+      <div class="card-accent"></div>
+      <div class="card-body">
+        <div class="card-num">INS-008 · MNT-2024-008</div>
+        <div class="card-title">Puerta RF bloqueada</div>
+        <div class="card-motivo">Daño estructural — sin posibilidad de rescate</div>
+        <div class="card-footer">
+          <span class="badge badge-cerrada">Cerrada</span>
+          <span class="card-meta">Marta Sánchez · 10/01</span>
+        </div>
+      </div>
+      <svg class="card-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+
+  </div>
+
+  <!-- ── Botones ──────────────────────────────────────────── -->
+  <p class="section-title">Botones</p>
+  <div style="display:flex; flex-direction:column; gap:10px; padding:0 16px 16px;">
+    <button class="btn btn-primary btn-block">Guardar expediente</button>
+    <button class="btn btn-secondary btn-block">Cancelar</button>
+    <button class="btn btn-danger btn-block">Cerrar expediente</button>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-primary btn-sm">Rescatar</button>
+      <button class="btn btn-secondary btn-sm">Editar</button>
+      <button class="btn btn-ghost btn-sm">Ver más</button>
+    </div>
+    <button class="btn btn-primary btn-block" disabled>Guardando...</button>
+  </div>
+
+  <!-- ── Formularios ──────────────────────────────────────── -->
+  <p class="section-title">Formularios</p>
+  <div style="display:flex; flex-direction:column; gap:16px; padding:0 16px 16px;">
+
+    <div class="form-group">
+      <label class="form-label">Número de instalación</label>
+      <input type="text" class="input" placeholder="INS-001" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Jefe de equipo</label>
+      <select class="select">
+        <option value="">Seleccionar jefe...</option>
+        <option>Luis Pérez</option>
+        <option>Marta Sánchez</option>
+        <option>Roberto López</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Motivo del rechazo</label>
+      <textarea class="textarea" placeholder="Describe el motivo del rechazo..."></textarea>
+      <span class="form-hint">Sé específico para facilitar la gestión.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Campo con error</label>
+      <input type="text" class="input error" value="INS-001" />
+      <span class="form-error">Ya existe un expediente con este número de mantenimiento.</span>
+    </div>
+
+  </div>
+
+  <!-- ── Burbujas de comentario ───────────────────────────── -->
+  <p class="section-title">Comentarios</p>
+  <div class="chat-thread">
+
+    <div class="bubble-wrap other">
+      <div class="bubble-author">Carlos Martínez (Supervisor)</div>
+      <div class="bubble other">Necesitamos fotografía de la sirena y del panel principal.</div>
+      <div class="bubble-time">Hoy, 09:14</div>
+    </div>
+
+    <div class="bubble-wrap own">
+      <div class="bubble-author">Tú</div>
+      <div class="bubble own">Adjunto las fotografías solicitadas.</div>
+      <div class="bubble-images">
+        <div style="background:#CBD5E1; aspect-ratio:1; border-radius:4px;"></div>
+        <div style="background:#94A3B8; aspect-ratio:1; border-radius:4px;"></div>
+        <div style="background:#CBD5E1; aspect-ratio:1; border-radius:4px;"></div>
+      </div>
+      <div class="bubble-time">Hoy, 10:32</div>
+    </div>
+
+    <div class="bubble-wrap other">
+      <div class="bubble-author">Carlos Martínez (Supervisor)</div>
+      <div class="bubble other">Perfecto, queda aprobado. Marcando como Rescatada.</div>
+      <div class="bubble-time">Hoy, 11:05</div>
+    </div>
+
+  </div>
+
+  <!-- ── Estado vacío ─────────────────────────────────────── -->
+  <p class="section-title">Estado vacío</p>
+  <div style="margin: 0 16px; background:var(--surface); border-radius:var(--r-lg); border:1px solid var(--border); margin-bottom:16px;">
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </div>
+      <p class="empty-title">Sin expedientes</p>
+      <p class="empty-body">No tenés casos asignados por el momento. Cuando el supervisor te asigne uno, aparecerá aquí.</p>
+    </div>
+  </div>
+
+  <!-- ── Esqueleto de carga ────────────────────────────────── -->
+  <p class="section-title">Esqueleto de carga</p>
+  <div class="card-list">
+    <div class="skeleton skeleton-card"></div>
+    <div class="skeleton skeleton-card"></div>
+    <div style="display:flex; gap:8px; padding:0;">
+      <div class="skeleton skeleton-text" style="width:60%;"></div>
+      <div class="skeleton skeleton-badge"></div>
+    </div>
+  </div>
+
+  <!-- ── Toasts ───────────────────────────────────────────── -->
+  <p class="section-title">Toasts (estáticos)</p>
+  <div style="display:flex; flex-direction:column; gap:8px; padding:0 16px 16px;">
+    <div class="toast toast-success" style="position:static; animation:none;">
+      <svg class="toast-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+      PPA marcada como Rescatada correctamente.
+    </div>
+    <div class="toast toast-error" style="position:static; animation:none;">
+      <svg class="toast-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+      Error al guardar. Revisá la conexión e intentá de nuevo.
+    </div>
+    <div class="toast toast-info" style="position:static; animation:none;">
+      <svg class="toast-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01"/>
+      </svg>
+      Tenés 4 casos pendientes de atención.
+    </div>
+  </div>
+
+</div>
