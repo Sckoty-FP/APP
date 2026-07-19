@@ -1,0 +1,135 @@
+<!-- Login — pantalla completa, sin header ni nav -->
+<div style="min-height:100vh; display:flex; flex-direction:column; background:var(--bg);">
+
+  <!-- Cabecera corporativa -->
+  <div style="background:linear-gradient(135deg,var(--chrome-bg),var(--chrome-bg-2)); padding:48px 32px 56px; text-align:center; position:relative; overflow:hidden;">
+    <!-- Círculo decorativo -->
+    <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.04);"></div>
+    <div style="position:absolute;bottom:-60px;left:-30px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.03);"></div>
+
+    <div style="position:relative;">
+      <!-- Logo/icono -->
+      <div style="width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;">
+        <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="1.7">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        </svg>
+      </div>
+      <div style="font-size:22px;font-weight:800;color:#FEF2F2;letter-spacing:-0.02em;line-height:1;">SGR-PPA</div>
+      <div style="font-size:13px;color:rgba(254,242,242,0.55);font-weight:500;margin-top:6px;letter-spacing:0.01em;">Sistema de Gestión de Rescate</div>
+    </div>
+  </div>
+
+  <!-- Tarjeta de login -->
+  <div style="flex:1;display:flex;flex-direction:column;padding:0 20px 32px;margin-top:-24px;">
+    <div style="background:var(--surface);border-radius:20px;border:1px solid var(--border-strong);box-shadow:var(--shadow-lg);padding:28px 24px;flex:1;display:flex;flex-direction:column;gap:20px;max-width:420px;width:100%;margin:0 auto;">
+
+      <div>
+        <div style="font-size:18px;font-weight:800;color:var(--text-primary);letter-spacing:-0.02em;">Acceder</div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">Introduce tus credenciales de empresa</div>
+      </div>
+
+      <!-- Formulario -->
+      <form id="login-form" style="display:flex;flex-direction:column;gap:16px;" novalidate>
+
+        <div class="form-group">
+          <label class="form-label" for="login-email">Correo corporativo</label>
+          <input
+            id="login-email"
+            type="email"
+            class="input"
+            placeholder="nombre@verisure.es"
+            autocomplete="email"
+            inputmode="email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Contraseña</label>
+          <div style="position:relative;">
+            <input
+              id="login-password"
+              type="password"
+              class="input"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+              style="padding-right:48px;"
+            />
+            <button
+              type="button"
+              id="toggle-password"
+              style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:4px;display:flex;align-items:center;"
+              aria-label="Mostrar contraseña"
+            >
+              <svg id="eye-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Error de login -->
+        <div id="login-error" role="alert" style="display:none;background:var(--danger-bg);border:1px solid #FECACA;border-radius:var(--r-md);padding:10px 14px;font-size:13px;color:var(--danger-text);font-weight:500;">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-btn" style="margin-top:4px;">
+          Entrar
+        </button>
+
+      </form>
+
+      <div style="text-align:center;">
+        <p style="font-size:12px;color:var(--text-tertiary);line-height:1.5;">
+          Acceso restringido a personal autorizado.<br>
+          Si no tenés acceso, contactá con tu supervisor.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  // Toggle mostrar/ocultar contraseña
+  const toggleBtn = document.getElementById('toggle-password');
+  const pwdInput  = document.getElementById('login-password');
+  const eyeIcon   = document.getElementById('eye-icon');
+
+  const eyeOpen   = `<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
+  const eyeClosed = `<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`;
+
+  toggleBtn.addEventListener('click', () => {
+    const isHidden = pwdInput.type === 'password';
+    pwdInput.type   = isHidden ? 'text' : 'password';
+    eyeIcon.innerHTML = isHidden ? eyeClosed : eyeOpen;
+  });
+
+  // Submit — el handler real está en auth.js, éste solo previene el envío nativo
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errorEl  = document.getElementById('login-error');
+    const btn      = document.getElementById('login-btn');
+
+    errorEl.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner spinner-light" style="width:18px;height:18px;"></div> Entrando...';
+
+    try {
+      // login() está definido en auth.js y expuesto como window.__authLogin
+      await window.__authLogin(email, password);
+    } catch (err) {
+      errorEl.textContent = err.message || 'Error al iniciar sesión. Verificá tus credenciales.';
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = 'Entrar';
+    }
+  });
+})();
+</script>
