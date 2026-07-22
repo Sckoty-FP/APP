@@ -320,7 +320,7 @@
             </div>
             <span class="badge badge-${e.estado}" style="flex-shrink:0;margin-top:2px;">${ESTADO_LABEL[e.estado]}</span>
           </div>
-          <div class="card-motivo">${e.motivo}</div>
+          <div class="card-motivo">${e.motivo_fallo?.nombre ?? e.motivo ?? '—'}</div>
           <div class="card-footer">
             <span class="card-meta">${e.jefe?.nombre ?? '—'}${tecnico}</span>
             <span class="card-meta">${fecha}</span>

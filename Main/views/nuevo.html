@@ -31,7 +31,9 @@
 
     <div class="form-group">
       <label class="form-label" for="f-motivo">Motivo de rechazo <span style="color:var(--danger)">*</span></label>
-      <textarea id="f-motivo" class="textarea" placeholder="¿Por qué fue rechazada la PPA?" required></textarea>
+      <select id="f-motivo" class="select" required>
+        <option value="">Cargando…</option>
+      </select>
     </div>
 
     <div class="form-group">
@@ -53,6 +55,7 @@
 <script>
 (async function () {
   const { listarJefesEquipo, listarTecnicosPorJefe, crearExpediente } = await import('/js/expedientes.js');
+  const { listarMotivos } = await import('/js/motivos.js');
   const user = window.__getCurrentUser?.();
 
   // Solo admin_ppa y delegado pueden crear expedientes (Módulo C)
@@ -66,6 +69,17 @@
 
   const jefeSelect    = document.getElementById('f-jefe');
   const tecnicoSelect = document.getElementById('f-tecnico');
+  const motivoSelect  = document.getElementById('f-motivo');
+
+  // Cargar motivos de fallo
+  try {
+    const motivos = await listarMotivos();
+    motivoSelect.innerHTML =
+      '<option value="">Seleccioná un motivo…</option>' +
+      motivos.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+  } catch (err) {
+    motivoSelect.innerHTML = `<option value="">Error al cargar: ${err.message}</option>`;
+  }
 
   // Cargar jefes de equipo
   try {
@@ -113,10 +127,10 @@
     const mantenimiento = document.getElementById('f-mantenimiento').value.trim();
     const jefe_id       = jefeSelect.value;
     const tecnico_id    = tecnicoSelect.value || null;
-    const motivo        = document.getElementById('f-motivo').value.trim();
+    const motivo_id     = motivoSelect.value || null;
     const observaciones = document.getElementById('f-observaciones').value.trim() || null;
 
-    if (!instalacion || !mantenimiento || !jefe_id || !motivo) {
+    if (!instalacion || !mantenimiento || !jefe_id || !motivo_id) {
       errorEl.textContent = 'Completá los campos obligatorios (*)';
       errorEl.style.display = 'block';
       return;
@@ -126,7 +140,7 @@
     btn.innerHTML = '<div class="spinner spinner-light" style="width:18px;height:18px;"></div> Guardando…';
 
     try {
-      await crearExpediente({ instalacion, mantenimiento, jefe_id, tecnico_id, motivo, observaciones, creado_por: user.id });
+      await crearExpediente({ instalacion, mantenimiento, jefe_id, tecnico_id, motivo_id, observaciones, creado_por: user.id });
       window.__navigate('#/expedientes');
     } catch (err) {
       const msg = err.message.includes('unique') || err.message.includes('duplicate')

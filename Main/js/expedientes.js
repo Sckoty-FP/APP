@@ -13,9 +13,10 @@ export async function listarExpedientes({ estado, busqueda, limit, jefeId, fecha
   let q = sb
     .from('expedientes')
     .select(`
-      id, instalacion, mantenimiento, estado, fecha_creacion, motivo,
+      id, instalacion, mantenimiento, estado, fecha_creacion, motivo, motivo_id,
       jefe:jefe_id ( nombre ),
-      tecnico:tecnico_id ( nombre )
+      tecnico:tecnico_id ( nombre ),
+      motivo_fallo:motivo_id ( nombre )
     `)
     .order('fecha_creacion', { ascending: false });
 
@@ -39,11 +40,12 @@ export async function obtenerExpediente(id) {
   const { data, error } = await sb
     .from('expedientes')
     .select(`
-      id, instalacion, mantenimiento, motivo, observaciones, estado,
+      id, instalacion, mantenimiento, motivo, motivo_id, observaciones, estado,
       fecha_creacion, fecha_rescate,
       jefe:jefe_id ( id, nombre ),
       tecnico:tecnico_id ( id, nombre ),
-      creador:creado_por ( nombre )
+      creador:creado_por ( nombre ),
+      motivo_fallo:motivo_id ( nombre )
     `)
     .eq('id', id)
     .single();
