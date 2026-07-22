@@ -55,11 +55,11 @@
   const { listarJefesEquipo, listarTecnicosPorJefe, crearExpediente } = await import('/js/expedientes.js');
   const user = window.__getCurrentUser?.();
 
-  // Solo supervisor puede crear
-  if (!user || user.rol !== 'supervisor') {
+  // Solo admin_ppa y delegado pueden crear expedientes (Módulo C)
+  if (!user || (user.rol !== 'admin_ppa' && user.rol !== 'delegado')) {
     document.getElementById('form-nuevo').innerHTML = `
       <div class="empty-state">
-        <p style="color:var(--danger);font-size:var(--text-sm);">Solo el supervisor puede crear expedientes.</p>
+        <p style="color:var(--danger);font-size:var(--text-sm);">No tenés permisos para crear expedientes.</p>
       </div>`;
     return;
   }

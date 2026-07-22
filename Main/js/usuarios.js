@@ -78,7 +78,7 @@ export async function cambiarRol(id, nuevoRol) {
 // ── Etiquetas ──────────────────────────────────────────────────
 
 export const ROL_LABEL = {
-  supervisor:   'Supervisor',
-  jefe_zona:    'Jefe de zona',
-  jefe_equipo:  'Jefe de equipo',
+  admin_ppa:   'AdminPPA',
+  delegado:    'Delegado',
+  jefe_equipo: 'Jefe de equipo',
 };

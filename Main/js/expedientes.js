@@ -4,6 +4,7 @@
  */
 
 import { getSupabase } from './supabase.js';
+import { LABELS_ESTADO } from './config.js';
 
 // ── Expedientes ────────────────────────────────────────────────
 
@@ -112,11 +113,5 @@ export async function listarTecnicosPorJefe(jefeId) {
 }
 
 // ── Etiquetas de estado ────────────────────────────────────────
-
-export const ESTADO_LABEL = {
-  pendiente:           'Pendiente',
-  en_gestion:          'En gestión',
-  pendiente_revision:  'Pend. revisión',
-  rescatada:           'Rescatada',
-  cerrada:             'Cerrada',
-};
+// Alias re-exportado desde config.js para no romper los imports existentes
+export const ESTADO_LABEL = LABELS_ESTADO;

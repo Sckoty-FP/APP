@@ -18,10 +18,10 @@ let _initialized  = false;
 // ── Redirección por rol ────────────────────────────────────────
 function redirectByRol(rol) {
   switch (rol) {
-    case 'supervisor':   navigate('#/expedientes'); break;
-    case 'jefe_zona':    navigate('#/estadisticas'); break;
-    case 'jefe_equipo':  navigate('#/expedientes'); break;
-    default:             navigate('#/expedientes'); break;
+    case 'admin_ppa':   navigate('#/expedientes'); break;
+    case 'delegado':    navigate('#/estadisticas'); break;
+    case 'jefe_equipo': navigate('#/expedientes'); break;
+    default:            navigate('#/expedientes'); break;
   }
 }
 

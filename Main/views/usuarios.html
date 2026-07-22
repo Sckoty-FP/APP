@@ -73,8 +73,8 @@
           <label class="label">Rol</label>
           <select id="nu-rol" class="select" style="width:100%;">
             <option value="jefe_equipo">Jefe de equipo</option>
-            <option value="jefe_zona">Jefe de zona</option>
-            <option value="supervisor">Supervisor</option>
+            <option value="delegado">Delegado</option>
+            <option value="admin_ppa">AdminPPA</option>
           </select>
         </div>
 
@@ -108,8 +108,8 @@
     await import('/js/usuarios.js');
 
   const ROL_BADGE_COLOR = {
-    supervisor:  'var(--brand)',
-    jefe_zona:   '#7c3aed',
+    admin_ppa:   'var(--brand)',
+    delegado:    '#7c3aed',
     jefe_equipo: '#0891b2',
   };
 
@@ -163,8 +163,8 @@
             "
           >
             <option value="jefe_equipo" ${u.rol === 'jefe_equipo' ? 'selected' : ''}>Jefe equipo</option>
-            <option value="jefe_zona"   ${u.rol === 'jefe_zona'   ? 'selected' : ''}>Jefe zona</option>
-            <option value="supervisor"  ${u.rol === 'supervisor'  ? 'selected' : ''}>Supervisor</option>
+            <option value="delegado"    ${u.rol === 'delegado'    ? 'selected' : ''}>Delegado</option>
+            <option value="admin_ppa"   ${u.rol === 'admin_ppa'   ? 'selected' : ''}>AdminPPA</option>
           </select>
           <button
             onclick="window.__toggleActivoUsuario('${u.id}', ${!u.activo})"

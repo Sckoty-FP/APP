@@ -103,8 +103,8 @@
     return;
   }
 
-  const esSupervisor   = user?.rol === 'supervisor';
-  const puedeCommentar = user?.rol === 'supervisor' || user?.rol === 'jefe_equipo';
+  const esSupervisor   = user?.rol === 'admin_ppa';
+  const puedeCommentar = user?.rol === 'admin_ppa' || user?.rol === 'jefe_equipo';
 
   // ── Render detalle ─────────────────────────────────────────
   function fmtFecha(iso) {
@@ -239,10 +239,10 @@
 
   const ACCION_LABEL = {
     pendiente:          'Volver a pendiente',
-    en_gestion:         'Marcar en gestión',
-    pendiente_revision: 'Solicitar revisión',
+    en_gestion:         'Marcar acción pendiente',
+    pendiente_revision: 'Solicitar aprobación',
     rescatada:          'Marcar como rescatada',
-    cerrada:            'Cerrar expediente',
+    cerrada:            'Marcar como no recuperable',
   };
 
   const ACCION_COLOR = {
@@ -279,7 +279,7 @@
 
     // Opciones según rol
     let opciones = [];
-    if (rol === 'supervisor') {
+    if (rol === 'admin_ppa') {
       opciones = TODOS_ESTADOS.filter(e => e !== exp.estado);
     } else if (rol === 'jefe_equipo') {
       opciones = TRANSICIONES_JEFE[exp.estado] ?? [];

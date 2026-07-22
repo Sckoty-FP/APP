@@ -86,7 +86,7 @@
   const user = window.__getCurrentUser?.();
   if (!user) return;
 
-  const ROL_LABEL = { supervisor: 'Supervisor', jefe_zona: 'Jefe de Zona', jefe_equipo: 'Jefe de Equipo' };
+  const ROL_LABEL = { admin_ppa: 'AdminPPA', delegado: 'Delegado', jefe_equipo: 'Jefe de Equipo' };
 
   // Iniciales
   const iniciales = user.nombre.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
@@ -107,8 +107,8 @@
       </div>`;
   }
 
-  // Sección admin — solo supervisor
-  if (user.rol === 'supervisor') {
+  // Sección admin — solo admin_ppa
+  if (user.rol === 'admin_ppa') {
     const adminSection = document.getElementById('perfil-admin-section');
     if (adminSection) adminSection.style.display = 'block';
   }

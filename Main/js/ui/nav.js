@@ -41,10 +41,10 @@ const NAV_ITEMS = [
   },
 ];
 
-// Rutas visibles por rol — supervisor ve todo, el resto no crea expedientes
+// Rutas visibles por rol
 const NAV_ROUTES = {
-  supervisor:  ['#/inicio', '#/expedientes', '#/nuevo', '#/estadisticas', '#/perfil'],
-  jefe_zona:   ['#/inicio', '#/expedientes', '#/estadisticas', '#/perfil'],
+  admin_ppa:   ['#/inicio', '#/expedientes', '#/nuevo', '#/estadisticas', '#/perfil'],
+  delegado:    ['#/inicio', '#/expedientes', '#/nuevo', '#/estadisticas', '#/perfil'],
   jefe_equipo: ['#/inicio', '#/expedientes', '#/estadisticas', '#/perfil'],
 };
 

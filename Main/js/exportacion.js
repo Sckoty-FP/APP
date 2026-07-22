@@ -3,6 +3,8 @@
  * jsPDF se carga dinámicamente solo cuando el usuario pulsa el botón.
  */
 
+import { LABELS_ESTADO, ORDEN_ESTADO_PDF } from './config.js';
+
 const JSPDF_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
 const AUTOTABLE_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js';
 
@@ -64,20 +66,36 @@ export async function exportarExpedientes(expedientes, filtrosDesc) {
 
   const startY = cabecera(doc, 'Lista de expedientes', filtrosDesc || null);
 
-  const ESTADO_LABEL = {
-    pendiente: 'Pendiente', en_gestion: 'En gestión',
-    pendiente_revision: 'P. revisión', rescatada: 'Rescatada', cerrada: 'Cerrada',
-  };
+  // Ordenar por estado (Módulo G), dentro de cada grupo por fecha desc
+  const ordenados = [...expedientes].sort((a, b) => {
+    const ia = ORDEN_ESTADO_PDF.indexOf(a.estado);
+    const ib = ORDEN_ESTADO_PDF.indexOf(b.estado);
+    if (ia !== ib) return ia - ib;
+    return new Date(b.fecha_creacion) - new Date(a.fecha_creacion);
+  });
 
-  const rows = expedientes.map(e => [
-    `#${e.mantenimiento}`,
-    e.instalacion,
-    e.jefe?.nombre ?? '—',
-    ESTADO_LABEL[e.estado] ?? e.estado,
-    new Date(e.fecha_creacion).toLocaleDateString('es-ES', {
-      day: '2-digit', month: '2-digit', year: '2-digit',
-    }),
-  ]);
+  // Construir filas con cabecera de grupo al cambiar de estado
+  let ultimoEstado = null;
+  const rows = [];
+  for (const e of ordenados) {
+    if (e.estado !== ultimoEstado) {
+      rows.push([{
+        content: LABELS_ESTADO[e.estado] ?? e.estado,
+        colSpan: 5,
+        styles: { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold', fontSize: 8 },
+      }]);
+      ultimoEstado = e.estado;
+    }
+    rows.push([
+      `#${e.mantenimiento}`,
+      e.instalacion,
+      e.jefe?.nombre ?? '—',
+      LABELS_ESTADO[e.estado] ?? e.estado,
+      new Date(e.fecha_creacion).toLocaleDateString('es-ES', {
+        day: '2-digit', month: '2-digit', year: '2-digit',
+      }),
+    ]);
+  }
 
   doc.autoTable({
     startY,
@@ -154,12 +172,16 @@ export async function exportarKPIs(kpis, tendencia, extras = {}) {
     doc.addImage(extras.chartImg, 'PNG', 14, y, chartSize, chartSize);
 
     // Leyenda de estados al lado del gráfico
-    const ESTADO_LABEL = {
-      pendiente: 'Pendiente', en_gestion: 'En gestión',
-      pend_revision: 'Pend. revisión', rescatada: 'Rescatada', cerrada: 'Cerrada',
+    // pend_revision es el alias que devuelve el SQL de KPIs
+    const LABELS_KPI = {
+      pendiente:     LABELS_ESTADO.pendiente,
+      en_gestion:    LABELS_ESTADO.en_gestion,
+      pend_revision: LABELS_ESTADO.pendiente_revision,
+      rescatada:     LABELS_ESTADO.rescatada,
+      cerrada:       LABELS_ESTADO.cerrada,
     };
     const COLORES = ['#f59e0b', '#6366f1', '#8b5cf6', '#10b981', '#6b7280'];
-    const keys    = Object.keys(ESTADO_LABEL);
+    const keys    = Object.keys(LABELS_KPI);
     let ly = y + 8;
     keys.forEach((k, i) => {
       const val = kpis[k] || 0;
@@ -168,7 +190,7 @@ export async function exportarKPIs(kpis, tendencia, extras = {}) {
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(40, 40, 40);
-      doc.text(`${ESTADO_LABEL[k]}: ${val}`, 92, ly);
+      doc.text(`${LABELS_KPI[k]}: ${val}`, 92, ly);
       ly += 10;
     });
 
@@ -198,11 +220,6 @@ export async function exportarKPIs(kpis, tendencia, extras = {}) {
 
   // ── Lista de expedientes ──────────────────────────────────────
   if (extras.expedientes?.length) {
-    const ESTADO_LABEL = {
-      pendiente: 'Pendiente', en_gestion: 'En gestión',
-      pendiente_revision: 'P. revisión', rescatada: 'Rescatada', cerrada: 'Cerrada',
-    };
-
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(40, 40, 40);
@@ -217,7 +234,7 @@ export async function exportarKPIs(kpis, tendencia, extras = {}) {
         e.instalacion,
         e.jefe?.nombre ?? '—',
         e.motivo?.slice(0, 45) + (e.motivo?.length > 45 ? '…' : '') ?? '—',
-        ESTADO_LABEL[e.estado] ?? e.estado,
+        LABELS_ESTADO[e.estado] ?? e.estado,
         new Date(e.fecha_creacion).toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' }),
       ]),
       styles: { fontSize: 7, cellPadding: 2 },

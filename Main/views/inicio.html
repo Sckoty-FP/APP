@@ -51,7 +51,7 @@
   const user = window.__getCurrentUser?.();
 
   // Saludo
-  const ROL_LABEL = { supervisor: 'Supervisor', jefe_zona: 'Jefe de Zona', jefe_equipo: 'Jefe de Equipo' };
+  const ROL_LABEL = { admin_ppa: 'AdminPPA', delegado: 'Delegado', jefe_equipo: 'Jefe de Equipo' };
   if (user) {
     document.getElementById('saludo-nombre').textContent = `Hola, ${user.nombre.split(' ')[0]}`;
     document.getElementById('saludo-rol').textContent    = ROL_LABEL[user.rol] ?? user.rol;
