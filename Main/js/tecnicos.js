@@ -35,8 +35,8 @@ export async function listarJefesEquipo() {
   const sb = getSupabase();
   const { data, error } = await sb
     .from('usuarios')
-    .select('id, nombre')
-    .eq('rol', 'jefe_equipo')
+    .select('id, nombre, rol')
+    .in('rol', ['jefe_equipo', 'admin_ppa'])
     .eq('activo', true)
     .order('nombre');
   if (error) throw error;

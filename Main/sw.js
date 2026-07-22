@@ -4,7 +4,7 @@
  * Las llamadas a Supabase (API y Auth) nunca se cachean.
  */
 
-const CACHE     = 'sgr-ppa-v1';
+const CACHE     = 'sgr-ppa-v2';
 const PRECACHE  = [
   '/',
   '/index.html',
@@ -17,6 +17,10 @@ const PRECACHE  = [
   '/js/expedientes.js',
   '/js/comentarios.js',
   '/js/estadisticas.js',
+  '/js/motivos.js',
+  '/js/tecnicos.js',
+  '/js/usuarios.js',
+  '/js/importacion.js',
   '/js/ui/nav.js',
   '/views/login.html',
   '/views/inicio.html',
@@ -25,6 +29,8 @@ const PRECACHE  = [
   '/views/nuevo.html',
   '/views/estadisticas.html',
   '/views/perfil.html',
+  '/views/tecnicos.html',
+  '/views/usuarios.html',
   '/icons/icon.svg',
 ];
 

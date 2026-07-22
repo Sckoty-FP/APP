@@ -336,7 +336,10 @@
 
   // ── Tarjeta expediente ─────────────────────────────────
   function tarjeta(e, conNotif = false) {
-    const fecha   = new Date(e.fecha_creacion).toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
+    const fechaBase = e.fecha_mantenimiento
+      ? new Date(e.fecha_mantenimiento + 'T00:00:00')
+      : new Date(e.fecha_creacion);
+    const fecha = fechaBase.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
     const tecnico = e.tecnico ? `<span style="color:var(--text-tertiary)"> · ${e.tecnico.nombre}</span>` : '';
     const dotNotif = `<span id="card-notif-${e.id}" class="card-notif-dot" style="${conNotif ? '' : 'display:none'}">!</span>`;
     return `

@@ -183,6 +183,11 @@ export async function analizarFilas(filas) {
  */
 export async function ejecutarImport(validas, userId, mapaTecnicos) {
   const sb = getSupabase();
+
+  // Verificar sesión activa antes de iniciar el loop
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) throw new Error('Sesión expirada. Recargá la página e iniciá sesión de nuevo.');
+
   const importados    = [];
   const erroresImport = [];
 

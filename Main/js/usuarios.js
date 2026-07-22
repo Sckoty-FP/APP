@@ -1,6 +1,6 @@
 /**
  * Módulo de dominio — usuarios.
- * Solo el supervisor accede a estas funciones (RLS lo garantiza en BD).
+ * Solo admin_ppa accede a estas funciones (RLS lo garantiza en BD).
  */
 
 import { getSupabase, getSupabaseCredentials } from './supabase.js';
@@ -21,33 +21,33 @@ export async function listarUsuarios() {
 // ── Crear ──────────────────────────────────────────────────────
 
 /**
- * Crea un usuario en Supabase Auth y luego inserta su perfil.
- * Usa una instancia temporal del cliente para que el signUp
- * no invalide la sesión activa del supervisor.
+ * Crea un usuario en Supabase Auth (via fetch directo, sin cliente JS extra)
+ * y luego inserta su perfil en la tabla usuarios con la sesión activa del admin.
+ * Usar fetch evita toda interferencia con la sesión activa del admin.
  */
 export async function crearUsuario({ nombre, email, password, rol, matricula }) {
-  // Importar createClient dinámicamente para no ensuciar el bundle principal
-  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-
-  const sb  = getSupabase();
+  const sb = getSupabase();
   const { url, key } = getSupabaseCredentials();
 
-  // Instancia temporal — no comparte sesión con la app principal
-  const tmp = createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
+  // Signup via REST directo — no toca la sesión del cliente principal
+  const res = await fetch(`${url}/auth/v1/signup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': key },
+    body: JSON.stringify({ email, password }),
+    credentials: 'omit',  // evita que cookies de la respuesta afecten la sesión activa
   });
-
-  const { data: authData, error: authError } = await tmp.auth.signUp({ email, password });
-  if (authError) throw new Error(authError.message);
+  const authData = await res.json();
+  if (!res.ok) {
+    throw new Error(authData.msg || authData.error_description || `Error Auth: ${res.status}`);
+  }
 
   const userId = authData.user?.id;
   if (!userId) throw new Error('No se recibió el ID del usuario creado.');
 
-  // Insertar perfil en la tabla usuarios (usando la sesión del supervisor)
+  // Insertar perfil en la tabla usuarios con la sesión activa del admin
   const payload = { id: userId, nombre, email, rol, activo: true };
   if (matricula) payload.matricula = matricula.trim().toUpperCase();
   const { error: insertError } = await sb.from('usuarios').insert(payload);
-
   if (insertError) throw new Error(insertError.message);
 
   return userId;

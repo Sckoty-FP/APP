@@ -13,7 +13,7 @@ export async function listarExpedientes({ estado, busqueda, limit, jefeId, fecha
   let q = sb
     .from('expedientes')
     .select(`
-      id, instalacion, mantenimiento, estado, fecha_creacion, motivo, motivo_id,
+      id, instalacion, mantenimiento, estado, fecha_creacion, fecha_mantenimiento, motivo, motivo_id,
       jefe:jefe_id ( nombre ),
       tecnico:tecnico_id ( nombre ),
       motivo_fallo:motivo_id ( nombre )
@@ -41,7 +41,7 @@ export async function obtenerExpediente(id) {
     .from('expedientes')
     .select(`
       id, instalacion, mantenimiento, motivo, motivo_id, observaciones, estado,
-      fecha_creacion, fecha_rescate,
+      fecha_creacion, fecha_mantenimiento, fecha_rescate,
       jefe:jefe_id ( id, nombre ),
       tecnico:tecnico_id ( id, nombre ),
       creador:creado_por ( nombre ),
@@ -95,7 +95,7 @@ export async function listarJefesEquipo() {
   const { data, error } = await sb
     .from('usuarios')
     .select('id, nombre')
-    .eq('rol', 'jefe_equipo')
+    .in('rol', ['jefe_equipo', 'admin_ppa'])
     .eq('activo', true)
     .order('nombre');
   if (error) throw error;
