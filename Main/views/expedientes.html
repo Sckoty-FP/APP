@@ -1,9 +1,24 @@
 <!-- Expedientes — lista con búsqueda y filtros -->
 <div style="padding-bottom: 80px;">
 
-  <!-- Barra superior: búsqueda + filtros + exportar -->
-  <!-- Exportar PDF (oculto hasta que cargue la lista, visible para admin_ppa y delegado) -->
-  <div id="export-bar" style="display:none; padding: var(--s3) var(--s4) 0; justify-content:flex-end;">
+  <!-- Barra superior: búsqueda + filtros + exportar + importar -->
+  <!-- Acciones (ocultas hasta que cargue la lista, visibles para admin_ppa y delegado) -->
+  <div id="export-bar" style="display:none; padding: var(--s3) var(--s4) 0; justify-content:flex-end; gap:var(--s2);">
+    <input type="file" id="importar-input" accept=".xlsx" style="display:none;" />
+    <button id="btn-importar-excel" style="
+      height:36px; padding:0 14px;
+      border-radius:var(--r-md);
+      border:1.5px solid var(--border-strong);
+      background:var(--surface); color:var(--text-secondary);
+      font-size:var(--text-xs); font-weight:var(--weight-semi);
+      cursor:pointer; display:flex; align-items:center; gap:6px;
+      font-family:var(--font); transition:all var(--t-fast);
+    ">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+      </svg>
+      Importar Excel
+    </button>
     <button id="btn-exportar-pdf" style="
       height:36px; padding:0 14px;
       border-radius:var(--r-md);
@@ -18,6 +33,24 @@
       </svg>
       Exportar PDF
     </button>
+  </div>
+
+  <!-- Modal importación Excel -->
+  <div id="import-modal" style="
+    position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,0.5);
+    display:none; align-items:flex-end; justify-content:center;
+  ">
+    <div style="
+      width:100%; max-width:448px;
+      background:var(--surface-2);
+      border-radius:var(--r-xl) var(--r-xl) 0 0;
+      padding:var(--s5) var(--s4) calc(var(--s5) + env(safe-area-inset-bottom, 0px));
+      box-shadow:0 -8px 32px rgba(0,0,0,0.18);
+      max-height:85vh; overflow-y:auto;
+    ">
+      <div id="import-modal-content"></div>
+    </div>
   </div>
 
   <!-- Búsqueda + botón filtros -->
@@ -393,6 +426,153 @@
   });
 
   cargar();
+
+  // ── Importación Excel ──────────────────────────────────────
+  if (rol === 'admin_ppa' || rol === 'delegado') {
+    const importInput  = document.getElementById('importar-input');
+    const btnImportar  = document.getElementById('btn-importar-excel');
+    const modal        = document.getElementById('import-modal');
+    const modalContent = document.getElementById('import-modal-content');
+
+    const btnStyle = (label) => `
+      flex:1; height:44px; border-radius:var(--r-md);
+      border:1.5px solid var(--border-strong);
+      background:var(--surface); color:var(--text-secondary);
+      font-size:var(--text-sm); font-weight:var(--weight-semi);
+      font-family:var(--font); cursor:pointer;`;
+
+    const btnPrimaryStyle = `
+      flex:2; height:44px; border-radius:var(--r-md);
+      border:none; background:var(--brand-gradient);
+      color:white; font-size:var(--text-sm); font-weight:var(--weight-semi);
+      font-family:var(--font); cursor:pointer;
+      box-shadow:0 2px 8px var(--brand-shadow);`;
+
+    btnImportar?.addEventListener('click', () => importInput?.click());
+
+    importInput?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      e.target.value = '';
+
+      modal.style.display = 'flex';
+      modalContent.innerHTML = `
+        <div style="text-align:center;padding:var(--s6) 0;">
+          <div class="spinner" style="width:24px;height:24px;margin:0 auto;"></div>
+          <div style="margin-top:var(--s3);color:var(--text-secondary);font-size:var(--text-sm);">Analizando archivo…</div>
+        </div>`;
+
+      try {
+        const { parsearExcel, analizarFilas } = await import('/js/importacion.js');
+        const filas = await parsearExcel(file);
+        const { validas, duplicadas, errores, mapaTecnicos } = await analizarFilas(filas);
+        window.__importDatos = { validas, mapaTecnicos };
+
+        const erroresHtml = errores.length ? `
+          <div style="margin-top:var(--s3);">
+            <div style="font-size:var(--text-xs);font-weight:600;color:var(--danger);margin-bottom:6px;">Con errores (${errores.length}):</div>
+            <div style="display:flex;flex-direction:column;gap:4px;max-height:110px;overflow-y:auto;">
+              ${errores.map(er => `
+                <div style="font-size:var(--text-xs);color:var(--danger);padding:4px 8px;background:var(--danger-bg);border-radius:var(--r-sm);">
+                  Fila ${er.fila}: ${er.razones.join(' · ')}
+                </div>`).join('')}
+            </div>
+          </div>` : '';
+
+        modalContent.innerHTML = `
+          <div style="width:36px;height:4px;border-radius:2px;background:var(--border-strong);margin:0 auto var(--s4);"></div>
+          <div style="font-size:var(--text-md);font-weight:var(--weight-bold);color:var(--text-primary);margin-bottom:var(--s4);">Vista previa</div>
+          <div style="display:flex;flex-direction:column;gap:var(--s2);margin-bottom:var(--s4);">
+            <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);padding:var(--s2) 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--text-secondary);">Total en archivo</span>
+              <strong>${filas.length}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);padding:var(--s2) 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--success);">Válidos para importar</span>
+              <strong style="color:var(--success);">${validas.length}</strong>
+            </div>
+            ${duplicadas.length ? `
+            <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);padding:var(--s2) 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--text-tertiary);">Ya existen (se saltarán)</span>
+              <strong style="color:var(--text-tertiary);">${duplicadas.length}</strong>
+            </div>` : ''}
+            ${errores.length ? `
+            <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);padding:var(--s2) 0;">
+              <span style="color:var(--danger);">Con errores</span>
+              <strong style="color:var(--danger);">${errores.length}</strong>
+            </div>` : ''}
+            ${erroresHtml}
+          </div>
+          <div style="display:flex;gap:var(--s2);">
+            <button onclick="window.__cerrarImportModal()" style="${btnStyle()}">Cancelar</button>
+            ${validas.length ? `<button id="btn-confirmar-import" onclick="window.__ejecutarImport()" style="${btnPrimaryStyle}">
+              Importar ${validas.length} expediente${validas.length !== 1 ? 's' : ''}
+            </button>` : ''}
+          </div>`;
+      } catch (err) {
+        modalContent.innerHTML = `
+          <div style="padding:var(--s4);">
+            <div style="color:var(--danger);font-size:var(--text-sm);margin-bottom:var(--s4);">${err.message}</div>
+            <button onclick="window.__cerrarImportModal()" style="${btnStyle()}">Cerrar</button>
+          </div>`;
+      }
+    });
+
+    window.__cerrarImportModal = function () {
+      modal.style.display = 'none';
+      modalContent.innerHTML = '';
+      window.__importDatos = null;
+      cargar();
+    };
+
+    window.__ejecutarImport = async function () {
+      const btn = document.getElementById('btn-confirmar-import');
+      if (btn) { btn.disabled = true; btn.textContent = 'Importando…'; }
+
+      const user = window.__getCurrentUser?.();
+      const { validas, mapaTecnicos } = window.__importDatos ?? {};
+      if (!validas?.length || !user) return;
+
+      try {
+        const { ejecutarImport } = await import('/js/importacion.js');
+        const { importados, errores } = await ejecutarImport(validas, user.id, mapaTecnicos);
+
+        const erroresHtml = errores.length ? `
+          <div style="margin-top:var(--s3);">
+            <div style="font-size:var(--text-xs);font-weight:600;color:var(--danger);margin-bottom:6px;">Errores al insertar:</div>
+            <div style="display:flex;flex-direction:column;gap:4px;max-height:100px;overflow-y:auto;">
+              ${errores.map(er => `
+                <div style="font-size:var(--text-xs);color:var(--danger);padding:4px 8px;background:var(--danger-bg);border-radius:var(--r-sm);">
+                  Fila ${er.fila}: ${er.razones.join(' · ')}
+                </div>`).join('')}
+            </div>
+          </div>` : '';
+
+        modalContent.innerHTML = `
+          <div style="width:36px;height:4px;border-radius:2px;background:var(--border-strong);margin:0 auto var(--s4);"></div>
+          <div style="font-size:var(--text-md);font-weight:var(--weight-bold);color:var(--text-primary);margin-bottom:var(--s4);">Importación completada</div>
+          <div style="display:flex;flex-direction:column;gap:var(--s2);margin-bottom:var(--s4);">
+            <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);padding:var(--s2) 0;border-bottom:1px solid var(--border);">
+              <span style="color:var(--success);">Importados</span>
+              <strong style="color:var(--success);">${importados.length}</strong>
+            </div>
+            ${errores.length ? `
+            <div style="display:flex;justify-content:space-between;font-size:var(--text-sm);padding:var(--s2) 0;">
+              <span style="color:var(--danger);">Errores al insertar</span>
+              <strong style="color:var(--danger);">${errores.length}</strong>
+            </div>` : ''}
+            ${erroresHtml}
+          </div>
+          <button onclick="window.__cerrarImportModal()" style="${btnPrimaryStyle}">Cerrar</button>`;
+      } catch (err) {
+        modalContent.innerHTML = `
+          <div style="padding:var(--s4);">
+            <div style="color:var(--danger);font-size:var(--text-sm);margin-bottom:var(--s4);">${err.message}</div>
+            <button onclick="window.__cerrarImportModal()" style="${btnStyle()}">Cerrar</button>
+          </div>`;
+      }
+    };
+  }
 
   // ── Badges en tiempo real ──────────────────────────────────
   document.addEventListener('notif:update', ({ detail }) => {

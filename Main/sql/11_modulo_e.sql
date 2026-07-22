@@ -47,4 +47,8 @@ ON CONFLICT (nombre) DO NOTHING;
 ALTER TABLE expedientes
   ADD COLUMN IF NOT EXISTS motivo_id uuid REFERENCES motivos_fallo(id);
 
+-- E5. Quitar NOT NULL de motivo (text) para que los nuevos registros
+-- puedan usar solo motivo_id sin romper la constraint.
+ALTER TABLE expedientes ALTER COLUMN motivo DROP NOT NULL;
+
 CREATE INDEX IF NOT EXISTS expedientes_motivo_id_idx ON expedientes (motivo_id);
