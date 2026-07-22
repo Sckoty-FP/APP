@@ -70,6 +70,11 @@
           <input id="nu-password" type="text" class="input" placeholder="Mínimo 6 caracteres" autocomplete="off" />
         </div>
         <div>
+          <label class="label">Matrícula <span style="color:var(--text-tertiary);font-weight:400;">(opcional)</span></label>
+          <input id="nu-matricula" type="text" class="input" placeholder="Ej: Q02181" autocomplete="off"
+            style="text-transform:uppercase;" />
+        </div>
+        <div>
           <label class="label">Rol</label>
           <select id="nu-rol" class="select" style="width:100%;">
             <option value="jefe_equipo">Jefe de equipo</option>
@@ -104,7 +109,7 @@
 
 <script>
 (async function () {
-  const { listarUsuarios, crearUsuario, toggleActivo, cambiarRol, ROL_LABEL } =
+  const { listarUsuarios, crearUsuario, toggleActivo, cambiarRol, actualizarMatricula, ROL_LABEL } =
     await import('/js/usuarios.js');
 
   const ROL_BADGE_COLOR = {
@@ -144,10 +149,13 @@
             font-size:var(--text-sm); font-weight:var(--weight-semi);
             color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
           ">${u.nombre}</div>
-          <div style="
-            font-size:var(--text-xs); color:var(--text-tertiary);
-            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-          ">${u.email}</div>
+          <div style="display:flex; align-items:center; gap:5px; margin-top:1px;">
+            ${u.matricula ? `<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:var(--r-full);background:var(--surface-2);color:var(--text-secondary);border:1px solid var(--border-strong);font-family:monospace;">${u.matricula}</span>` : ''}
+            <span style="
+              font-size:var(--text-xs); color:var(--text-tertiary);
+              white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+            ">${u.email}</span>
+          </div>
         </div>
 
         <!-- Rol + acciones -->
@@ -247,10 +255,11 @@
   });
 
   function limpiarFormulario() {
-    document.getElementById('nu-nombre').value   = '';
-    document.getElementById('nu-email').value    = '';
-    document.getElementById('nu-password').value = '';
-    document.getElementById('nu-rol').value      = 'jefe_equipo';
+    document.getElementById('nu-nombre').value    = '';
+    document.getElementById('nu-email').value     = '';
+    document.getElementById('nu-password').value  = '';
+    document.getElementById('nu-matricula').value = '';
+    document.getElementById('nu-rol').value       = 'jefe_equipo';
     mostrarError('');
   }
 
@@ -261,10 +270,11 @@
   }
 
   document.getElementById('btn-confirmar-crear').addEventListener('click', async () => {
-    const nombre   = document.getElementById('nu-nombre').value.trim();
-    const email    = document.getElementById('nu-email').value.trim();
-    const password = document.getElementById('nu-password').value;
-    const rol      = document.getElementById('nu-rol').value;
+    const nombre    = document.getElementById('nu-nombre').value.trim();
+    const email     = document.getElementById('nu-email').value.trim();
+    const password  = document.getElementById('nu-password').value;
+    const matricula = document.getElementById('nu-matricula').value.trim();
+    const rol       = document.getElementById('nu-rol').value;
 
     if (!nombre || !email || !password) {
       mostrarError('Completá todos los campos.');
@@ -280,7 +290,7 @@
     btn.disabled = true;
 
     try {
-      await crearUsuario({ nombre, email, password, rol });
+      await crearUsuario({ nombre, email, password, rol, matricula });
       panel.style.display = 'none';
       limpiarFormulario();
       cargar();

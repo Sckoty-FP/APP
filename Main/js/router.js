@@ -18,6 +18,7 @@ const ROUTES = {
   '#/estadisticas':  { view: 'estadisticas',  title: 'Estadísticas' },
   '#/perfil':        { view: 'perfil',        title: 'Perfil' },
   '#/usuarios':      { view: 'usuarios',      title: 'Usuarios',          navActive: '#/perfil', rol: 'admin_ppa' },
+  '#/tecnicos':      { view: 'tecnicos',      title: 'Técnicos',          navActive: '#/perfil' },
   '#/estilos':       { view: 'estilos',       title: 'Sistema visual' },  // solo dev
 };
 

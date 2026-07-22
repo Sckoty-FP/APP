@@ -11,7 +11,7 @@ export async function listarUsuarios() {
   const sb = getSupabase();
   const { data, error } = await sb
     .from('usuarios')
-    .select('id, nombre, email, rol, activo')
+    .select('id, nombre, email, rol, activo, matricula')
     .order('rol')
     .order('nombre');
   if (error) throw error;
@@ -25,7 +25,7 @@ export async function listarUsuarios() {
  * Usa una instancia temporal del cliente para que el signUp
  * no invalide la sesión activa del supervisor.
  */
-export async function crearUsuario({ nombre, email, password, rol }) {
+export async function crearUsuario({ nombre, email, password, rol, matricula }) {
   // Importar createClient dinámicamente para no ensuciar el bundle principal
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
 
@@ -44,9 +44,9 @@ export async function crearUsuario({ nombre, email, password, rol }) {
   if (!userId) throw new Error('No se recibió el ID del usuario creado.');
 
   // Insertar perfil en la tabla usuarios (usando la sesión del supervisor)
-  const { error: insertError } = await sb
-    .from('usuarios')
-    .insert({ id: userId, nombre, email, rol, activo: true });
+  const payload = { id: userId, nombre, email, rol, activo: true };
+  if (matricula) payload.matricula = matricula.trim().toUpperCase();
+  const { error: insertError } = await sb.from('usuarios').insert(payload);
 
   if (insertError) throw new Error(insertError.message);
 
@@ -72,6 +72,15 @@ export async function cambiarRol(id, nuevoRol) {
     .from('usuarios')
     .update({ rol: nuevoRol })
     .eq('id', id);
+  if (error) throw error;
+}
+
+// ── Actualizar matrícula ────────────────────────────────────────
+
+export async function actualizarMatricula(id, matricula) {
+  const sb = getSupabase();
+  const val = matricula ? matricula.trim().toUpperCase() : null;
+  const { error } = await sb.from('usuarios').update({ matricula: val }).eq('id', id);
   if (error) throw error;
 }
 

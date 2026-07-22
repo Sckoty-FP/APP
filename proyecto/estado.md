@@ -6,8 +6,8 @@
 
 ## Estado actual
 
-**Fase activa:** v2 completada (Fases 1-3). v2/4 Excel bloqueada esperando archivo.
-**Ultima actualizacion:** 2026-07-19
+**Fase activa:** v3 en construccion — Modulos A, B, C, G completados. D completado (codigo). E y F pendientes.
+**Ultima actualizacion:** 2026-07-22
 
 ---
 
@@ -50,19 +50,17 @@ live-server rompe los fragmentos HTML inyectando scripts dentro de los <svg>.
 
 ## Pendientes criticos
 
-- [ ] Conseguir el Excel real de importacion (desbloquea Fase 8)
-- [ ] Ejecutar Main/sql/05_kpis.sql en Supabase SQL Editor (desbloquea estadísticas)
-- [ ] Generar iconos PNG: abrir Main/icons/generate.html en el navegador y guardar los archivos en Main/icons/
-- [ ] Emails de jefes de equipo reales
+- [ ] Ejecutar Main/sql/10_modulo_d.sql en Supabase SQL Editor (agrega columna matricula a tecnicos y usuarios)
+- [ ] Modulo E: tabla motivos_fallo + cambiar motivo a select en nuevo.html
+- [ ] Modulo F: importacion Excel rediseñada (depende de D y E)
+- [ ] Usuarios de prueba actualizados: ruben.beltran=admin_ppa, sergio.rey=delegado (v3)
 
----
+## Usuarios de prueba (v3)
 
-## Usuarios de prueba en BD
-
-- `ruben.beltran@verisure.es` — supervisor (real)
-- `sergio.rey@verisure.es` — jefe_zona (real)
-- `test.jefe@verisure.es` — jefe_equipo (prueba, UUID: 4410fb9b-d522-4172-b8a6-0fc069f442a5)
-- `test.jefe2@verisure.es` — jefe_equipo (prueba, UUID: ec7db121-34d2-4736-bd8b-e4dd47854f2d)
+- `ruben.beltran@verisure.es` — admin_ppa (antes supervisor)
+- `sergio.rey@verisure.es` — delegado (antes jefe_zona)
+- `test.jefe@verisure.es` — jefe_equipo (UUID: 4410fb9b-d522-4172-b8a6-0fc069f442a5)
+- `test.jefe2@verisure.es` — jefe_equipo (UUID: ec7db121-34d2-4736-bd8b-e4dd47854f2d)
 
 ---
 
