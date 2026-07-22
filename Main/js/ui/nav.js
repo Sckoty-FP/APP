@@ -52,7 +52,7 @@ export function renderNav(activeRoute, rol) {
   const nav = document.getElementById('app-nav');
   if (!nav) return;
   const active  = activeRoute || '#/inicio';
-  const allowed = NAV_ROUTES[rol] ?? NAV_ROUTES.supervisor;
+  const allowed = NAV_ROUTES[rol] ?? NAV_ROUTES.admin_ppa;
   const items   = NAV_ITEMS.filter(i => allowed.includes(i.route));
   nav.innerHTML = `
     <div class="nav-inner">
