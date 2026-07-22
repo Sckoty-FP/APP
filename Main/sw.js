@@ -50,6 +50,9 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
+  // Ignorar esquemas no-HTTP (chrome-extension://, etc.)
+  if (!event.request.url.startsWith('http')) return;
+
   const url = new URL(event.request.url);
 
   // Supabase: nunca cachear (API + Auth)
