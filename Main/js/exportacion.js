@@ -174,13 +174,12 @@ export async function exportarKPIs(kpis, tendencia, extras = {}) {
     // Leyenda de estados al lado del gráfico
     // pend_revision es el alias que devuelve el SQL de KPIs
     const LABELS_KPI = {
-      pendiente:     LABELS_ESTADO.pendiente,
       en_gestion:    LABELS_ESTADO.en_gestion,
       pend_revision: LABELS_ESTADO.pendiente_revision,
       rescatada:     LABELS_ESTADO.rescatada,
       cerrada:       LABELS_ESTADO.cerrada,
     };
-    const COLORES = ['#f59e0b', '#6366f1', '#8b5cf6', '#10b981', '#6b7280'];
+    const COLORES = ['#6366f1', '#8b5cf6', '#10b981', '#6b7280'];
     const keys    = Object.keys(LABELS_KPI);
     let ly = y + 8;
     keys.forEach((k, i) => {

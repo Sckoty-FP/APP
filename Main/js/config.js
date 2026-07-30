@@ -5,7 +5,6 @@
  */
 
 export const LABELS_ESTADO = {
-  pendiente:           'Pendiente',
   en_gestion:          'Acción Pendiente',
   pendiente_revision:  'Pte Aprobación',
   rescatada:           'Rescatada',
@@ -19,7 +18,7 @@ export const LABELS_ROL = {
 };
 
 // Antigüedad de un expediente abierto
-const ESTADOS_ABIERTOS = new Set(['pendiente', 'en_gestion', 'pendiente_revision']);
+const ESTADOS_ABIERTOS = new Set(['en_gestion', 'pendiente_revision']);
 
 export function calcularAntiguedad(fechaIso, estado) {
   if (!ESTADOS_ABIERTOS.has(estado)) return null;
@@ -39,7 +38,6 @@ export function corregirNombre(nombre) {
 
 // Orden de agrupación para exportación PDF (Módulo G)
 export const ORDEN_ESTADO_PDF = [
-  'pendiente',
   'en_gestion',
   'pendiente_revision',
   'rescatada',

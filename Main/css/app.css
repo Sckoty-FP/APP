@@ -707,6 +707,23 @@ button { font-family: var(--font); cursor: pointer; }
 
 .bubble-images img:hover { opacity: 0.85; }
 
+/* Burbuja de cierre "No Recuperable" */
+.bubble-wrap.rechazo {
+  align-self: stretch;
+  max-width: 100%;
+  align-items: stretch;
+}
+.bubble-wrap.rechazo .bubble-author {
+  color: var(--danger);
+  font-weight: var(--weight-bold);
+}
+.bubble.rechazo {
+  background: var(--danger-bg);
+  border: 1.5px solid var(--danger-border);
+  color: var(--danger-text);
+  border-radius: var(--r-md);
+}
+
 
 /* =============================================================
    ESTADO VACÍO

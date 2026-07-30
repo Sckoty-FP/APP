@@ -173,8 +173,8 @@
   // link:  destino de "Ver todos"
   const MI_ACCION = {
     jefe_equipo: {
-      query: { estadoIn: ['pendiente', 'en_gestion'] },
-      link:  '#/expedientes?estado=pendiente',
+      query: { estadoIn: ['en_gestion'] },
+      link:  '#/expedientes?estado=en_gestion',
     },
     admin_ppa: {
       query: { estado: 'pendiente_revision' },
@@ -217,7 +217,7 @@
     }
     if (esDelegado) {
       queries.push(listarExpedientes({
-        estadoIn:      ['pendiente', 'en_gestion'],
+        estadoIn:      ['en_gestion', 'pendiente_revision'],
         creadoAntesDe: hace15Dias,
         limit:         5,
       }));

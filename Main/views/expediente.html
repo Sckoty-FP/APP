@@ -232,12 +232,11 @@
   }
 
   // ── Máquina de estados ─────────────────────────────────────
-  const TODOS_ESTADOS  = ['pendiente', 'en_gestion', 'pendiente_revision', 'rescatada', 'cerrada'];
+  const TODOS_ESTADOS  = ['en_gestion', 'pendiente_revision', 'rescatada', 'cerrada'];
   const TERMINALES     = new Set(['rescatada', 'cerrada']);
 
   // Jefe de equipo: solo avance lineal
   const TRANSICIONES_JEFE = {
-    pendiente:          ['en_gestion'],
     en_gestion:         ['pendiente_revision'],
     pendiente_revision: [],
     rescatada:          [],
@@ -245,7 +244,6 @@
   };
 
   const ACCION_LABEL = {
-    pendiente:          'Volver a pendiente',
     en_gestion:         'Marcar acción pendiente',
     pendiente_revision: 'Solicitar aprobación',
     rescatada:          'Marcar como rescatada',
@@ -253,7 +251,6 @@
   };
 
   const ACCION_COLOR = {
-    pendiente:          'var(--pendiente-accent)',
     en_gestion:         'var(--gestion-accent)',
     pendiente_revision: 'var(--revision-accent)',
     rescatada:          'var(--rescatada-accent)',
@@ -297,6 +294,19 @@
       return;
     }
 
+    // Botón "No Recuperable" para jefe cuando está en gestión (acción directa con motivo)
+    const btnNoRecuperable = (rol === 'jefe_equipo' && exp.estado === 'en_gestion') ? `
+      <button
+        class="btn btn-secondary"
+        onclick="window.__abrirModalNoRecuperable('${exp.id}')"
+        style="justify-content:flex-start;gap:var(--s2);border-left:3px solid var(--cerrada-accent);margin-top:var(--s2);"
+      >
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        No Recuperable
+      </button>` : '';
+
     seccion.style.display = 'block';
     seccion.innerHTML = `
       <div class="card" style="padding:var(--s4);">
@@ -312,6 +322,7 @@
               ${ACCION_LABEL[est]}
             </button>
           `).join('')}
+          ${btnNoRecuperable}
         </div>
         <div id="estado-error" style="display:none;margin-top:var(--s3);background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--r-md);padding:10px 14px;font-size:var(--text-sm);color:var(--danger-text);font-weight:500;"></div>
       </div>
@@ -340,6 +351,98 @@
         errorEl.style.display = 'block';
       }
       btns.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+    }
+  };
+
+  // Modal "No Recuperable" — jefe de equipo desde en_gestion
+  window.__abrirModalNoRecuperable = function (expedienteId) {
+    // Eliminar modal anterior si existiera
+    document.getElementById('modal-no-recuperable')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-no-recuperable';
+    modal.style.cssText = `
+      position:fixed; inset:0; z-index:300;
+      background:rgba(0,0,0,0.55);
+      display:flex; align-items:flex-end; justify-content:center;
+    `;
+    modal.innerHTML = `
+      <div style="
+        width:100%; max-width:448px;
+        background:var(--surface-2);
+        border-radius:var(--r-xl) var(--r-xl) 0 0;
+        padding:var(--s5) var(--s4) calc(var(--s5) + env(safe-area-inset-bottom, 0px));
+        box-shadow:0 -8px 32px rgba(0,0,0,0.2);
+      ">
+        <div style="width:36px;height:4px;border-radius:2px;background:var(--border-strong);margin:0 auto var(--s4);"></div>
+        <div style="font-size:var(--text-md);font-weight:var(--weight-bold);color:var(--text-primary);margin-bottom:4px;">Marcar como No Recuperable</div>
+        <div style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--s4);">Explicá brevemente por qué no se pudo recuperar este expediente. Quedará registrado en el hilo de comentarios.</div>
+        <div class="form-group" style="margin-bottom:var(--s4);">
+          <label class="form-label" for="nr-motivo">Motivo de cierre <span style="color:var(--danger)">*</span></label>
+          <textarea
+            id="nr-motivo"
+            class="textarea"
+            rows="3"
+            placeholder="Describí el motivo por el que no se puede recuperar…"
+            style="resize:none;"
+          ></textarea>
+        </div>
+        <div id="nr-error" style="display:none;background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--r-md);padding:10px 14px;font-size:var(--text-sm);color:var(--danger-text);font-weight:500;margin-bottom:var(--s3);"></div>
+        <div style="display:flex;gap:var(--s2);">
+          <button
+            onclick="document.getElementById('modal-no-recuperable').remove()"
+            style="
+              flex:1; height:44px; border-radius:var(--r-md);
+              border:1.5px solid var(--border-strong);
+              background:var(--surface); color:var(--text-secondary);
+              font-size:var(--text-sm); font-weight:var(--weight-semi);
+              font-family:var(--font); cursor:pointer;
+            "
+          >Cancelar</button>
+          <button
+            id="nr-btn-confirmar"
+            onclick="window.__confirmarNoRecuperable('${expedienteId}')"
+            style="
+              flex:2; height:44px; border-radius:var(--r-md);
+              border:none; background:var(--danger);
+              color:white; font-size:var(--text-sm); font-weight:var(--weight-semi);
+              font-family:var(--font); cursor:pointer;
+            "
+          >Confirmar cierre</button>
+        </div>
+      </div>
+    `;
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+    setTimeout(() => document.getElementById('nr-motivo')?.focus(), 80);
+  };
+
+  window.__confirmarNoRecuperable = async function (expedienteId) {
+    const motivo  = document.getElementById('nr-motivo')?.value.trim();
+    const errorEl = document.getElementById('nr-error');
+    const btn     = document.getElementById('nr-btn-confirmar');
+
+    if (!motivo) {
+      errorEl.textContent = 'El motivo es obligatorio.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner spinner-light" style="width:16px;height:16px;margin:0 auto;"></div>';
+
+    try {
+      // 1. Registrar el motivo como comentario de tipo 'rechazo'
+      await crearComentario(expedienteId, user.id, motivo, 'rechazo');
+      // 2. Cambiar estado a cerrada
+      await cambiarEstado(expedienteId, 'cerrada');
+      document.getElementById('modal-no-recuperable')?.remove();
+      window.__navigate(`#/expediente?id=${expedienteId}`);
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Confirmar cierre';
     }
   };
 
@@ -438,9 +541,23 @@
       }
 
       const items = await Promise.all(comentarios.map(async c => {
-        const esPropio = c.usuario?.id === user?.id;
         const hora = new Date(c.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
         const dia  = new Date(c.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+
+        // Comentario de cierre "No Recuperable"
+        if (c.tipo === 'rechazo') {
+          return `
+            <div class="bubble-wrap rechazo">
+              <div class="bubble-author">${c.usuario?.nombre ?? '—'} · No Recuperable</div>
+              <div class="bubble rechazo">
+                <div style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;opacity:0.75;">Motivo de cierre</div>
+                <div style="word-break:break-word;">${c.comentario ?? ''}</div>
+              </div>
+              <div class="bubble-time">${dia} · ${hora}</div>
+            </div>`;
+        }
+
+        const esPropio = c.usuario?.id === user?.id;
 
         let imgsHtml = '';
         if (c.imagenes?.length) {

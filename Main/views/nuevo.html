@@ -140,7 +140,7 @@
     btn.innerHTML = '<div class="spinner spinner-light" style="width:18px;height:18px;"></div> Guardando…';
 
     try {
-      await crearExpediente({ instalacion, mantenimiento, jefe_id, tecnico_id, motivo_id, observaciones, creado_por: user.id });
+      await crearExpediente({ instalacion, mantenimiento, jefe_id, tecnico_id, motivo_id, observaciones, creado_por: user.id, estado: 'en_gestion' });
       window.__navigate('#/expedientes');
     } catch (err) {
       const msg = err.message.includes('unique') || err.message.includes('duplicate')

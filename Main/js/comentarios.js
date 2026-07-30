@@ -12,7 +12,7 @@ export async function listarComentarios(expedienteId) {
   const { data, error } = await sb
     .from('comentarios')
     .select(`
-      id, comentario, fecha,
+      id, comentario, fecha, tipo,
       usuario:usuario_id ( id, nombre ),
       imagenes ( id, url )
     `)
@@ -22,7 +22,7 @@ export async function listarComentarios(expedienteId) {
   return data ?? [];
 }
 
-export async function crearComentario(expedienteId, usuarioId, texto) {
+export async function crearComentario(expedienteId, usuarioId, texto, tipo = 'normal') {
   const sb = getSupabase();
   const { data, error } = await sb
     .from('comentarios')
@@ -30,6 +30,7 @@ export async function crearComentario(expedienteId, usuarioId, texto) {
       expediente_id: expedienteId,
       usuario_id:    usuarioId,
       comentario:    texto || null,
+      tipo,
     })
     .select('id')
     .single();

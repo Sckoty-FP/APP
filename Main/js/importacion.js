@@ -234,6 +234,7 @@ export async function ejecutarImport(validas, userId, mapaTecnicos) {
       observaciones:       fila.observaciones,
       fecha_mantenimiento: fechaMant,
       creado_por:          userId,
+      estado:              'en_gestion',
     });
 
     if (error) {
