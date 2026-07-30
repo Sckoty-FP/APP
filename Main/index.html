@@ -24,20 +24,26 @@
 </head>
 <body>
 
-  <div id="app" style="display:flex; flex-direction:column; height:100vh; max-width:448px; margin:0 auto;">
+  <div id="app">
 
-    <header id="app-header">
-      <h1 id="page-title">SGR-PPA</h1>
-      <div class="header-action" id="header-action"></div>
-    </header>
+    <!-- Sidebar — visible solo en escritorio (≥1024px) -->
+    <aside id="app-sidebar"></aside>
 
-    <main id="app-main" style="flex:1; overflow-y:auto;">
-      <div class="empty-state">
-        <div class="spinner"></div>
-      </div>
-    </main>
+    <!-- Shell: header + main + nav (móvil) -->
+    <div class="app-content">
+      <header id="app-header">
+        <h1 id="page-title">SGR-PPA</h1>
+        <div class="header-action" id="header-action"></div>
+      </header>
 
-    <nav id="app-nav" class="nav-safe-bottom"></nav>
+      <main id="app-main">
+        <div class="empty-state">
+          <div class="spinner"></div>
+        </div>
+      </main>
+
+      <nav id="app-nav" class="nav-safe-bottom"></nav>
+    </div>
 
   </div>
 
