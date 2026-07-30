@@ -88,6 +88,67 @@
       </div>
     </div>
 
+    <!-- Instalar PWA -->
+    <div id="pwa-card" style="display:none;">
+      <div style="font-size:var(--text-xs); font-weight:var(--weight-semi); color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:var(--s2);">
+        Aplicación
+      </div>
+      <!-- Android / Chrome Desktop: botón nativo -->
+      <button id="btn-instalar-pwa" style="
+        display:none; width:100%; padding:14px var(--s4); border-radius:var(--r-lg);
+        background:var(--surface); border:1px solid var(--border-strong);
+        color:var(--text-primary); font-size:var(--text-sm);
+        font-weight:var(--weight-semi); cursor:pointer;
+        font-family:var(--font); align-items:center; justify-content:space-between;
+        transition:background var(--t-fast);
+      "
+        onmouseover="this.style.background='var(--surface-2)'"
+        onmouseout="this.style.background='var(--surface)'"
+      >
+        <div style="display:flex; align-items:center; gap:10px;">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="color:var(--brand);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Instalar en pantalla de inicio
+        </div>
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="color:var(--text-tertiary);">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+      <!-- iOS: instrucciones manuales -->
+      <div id="ios-install-hint" style="
+        display:none;
+        padding:var(--s4); border-radius:var(--r-lg);
+        background:var(--surface); border:1px solid var(--border-strong);
+        font-size:var(--text-sm); color:var(--text-secondary); line-height:1.6;
+      ">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:var(--s2); color:var(--text-primary); font-weight:var(--weight-semi);">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="color:var(--brand); flex-shrink:0;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          Instalar en iPhone / iPad
+        </div>
+        Tocá el botón <strong>Compartir</strong>
+        <svg style="display:inline;vertical-align:middle;" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+        </svg>
+        de Safari y luego <strong>"Agregar a inicio"</strong>.
+      </div>
+      <!-- Ya instalada -->
+      <div id="pwa-installed-msg" style="
+        display:none;
+        padding:var(--s3) var(--s4); border-radius:var(--r-lg);
+        background:var(--rescatada-bg); border:1px solid var(--rescatada-border);
+        font-size:var(--text-sm); color:var(--rescatada-text); font-weight:var(--weight-semi);
+        display:none; align-items:center; gap:8px;
+      ">
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        La app ya está instalada
+      </div>
+    </div>
+
     <!-- Logout -->
     <button
       onclick="if(confirm('¿Cerrás sesión?')) window.__authLogout()"
@@ -164,5 +225,52 @@
          </span>
        </div>`;
   }
+  // ── PWA install ──────────────────────────────────────────
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+  const isIOS        = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+
+  const pwaCard      = document.getElementById('pwa-card');
+  const btnInstalar  = document.getElementById('btn-instalar-pwa');
+  const iosHint      = document.getElementById('ios-install-hint');
+  const installedMsg = document.getElementById('pwa-installed-msg');
+
+  if (isStandalone) {
+    // Ya corre como app instalada
+    pwaCard.style.display      = 'block';
+    installedMsg.style.display = 'flex';
+  } else if (isIOS) {
+    // iOS no soporta beforeinstallprompt — instrucciones manuales
+    pwaCard.style.display  = 'block';
+    iosHint.style.display  = 'block';
+  } else if (window.__pwaInstallPrompt) {
+    // Android / Chrome desktop: prompt disponible
+    pwaCard.style.display     = 'block';
+    btnInstalar.style.display = 'flex';
+  } else {
+    // Esperar a que el browser lo habilite
+    window.addEventListener('pwa:installable', () => {
+      pwaCard.style.display     = 'block';
+      btnInstalar.style.display = 'flex';
+    }, { once: true });
+  }
+
+  btnInstalar?.addEventListener('click', async () => {
+    const prompt = window.__pwaInstallPrompt;
+    if (!prompt) return;
+    prompt.prompt();
+    const { outcome } = await prompt.userChoice;
+    if (outcome === 'accepted') {
+      window.__pwaInstallPrompt = null;
+      btnInstalar.style.display  = 'none';
+      installedMsg.style.display = 'flex';
+    }
+  });
+
+  window.addEventListener('pwa:installed', () => {
+    if (btnInstalar) btnInstalar.style.display  = 'none';
+    if (iosHint)     iosHint.style.display      = 'none';
+    if (installedMsg) installedMsg.style.display = 'flex';
+  }, { once: true });
 })();
 </script>
