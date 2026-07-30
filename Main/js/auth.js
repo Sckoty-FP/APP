@@ -205,14 +205,16 @@ export async function initAuth() {
         await loadProfile(session.user);
         updateHeaderUser();
         setShellVisible(true);
-        iniciarNotificaciones();
         if (location.hash === '#/login' || location.hash === '') {
           redirectByRol(_currentUser.rol);
         }
       } catch (err) {
-        console.error('[auth]', err.message);
+        console.error('[auth] error al cargar perfil:', err.message);
         await sb.auth.signOut();
+        return;
       }
+      // Notificaciones fuera del catch crítico: un error aquí no debe desloguear
+      iniciarNotificaciones();
     }
   });
 
@@ -230,11 +232,13 @@ export async function initAuth() {
     await loadProfile(session.user);
     updateHeaderUser();
     setShellVisible(true);
-    iniciarNotificaciones();
   } catch (err) {
-    console.error('[auth]', err.message);
+    console.error('[auth] error al cargar perfil:', err.message);
     await sb.auth.signOut();
+    return;
   }
+  // Notificaciones fuera del catch crítico: un error aquí no debe desloguear
+  iniciarNotificaciones();
 }
 
 // ── Exponer al HTML para los event handlers inline ────────────

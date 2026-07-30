@@ -17,6 +17,10 @@ const _expConNotif = new Set();
 
 // ── Iniciar suscripción ─────────────────────────────────────────
 export function iniciarNotificaciones() {
+  // Si ya hay un canal activo, limpiarlo antes de volver a suscribir
+  // (evita el error "cannot add callbacks after subscribe()")
+  if (_channel) detenerNotificaciones();
+
   const sb = getSupabase();
 
   _channel = sb
