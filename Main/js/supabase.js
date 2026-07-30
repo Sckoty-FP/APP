@@ -22,7 +22,14 @@ export async function initSupabase() {
     'https://esm.sh/@supabase/supabase-js@2'
   );
 
-  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession:     true,
+      autoRefreshToken:   true,
+      detectSessionInUrl: false,
+      storageKey:         'sgr-ppa-session',
+    },
+  });
   return true;
 }
 

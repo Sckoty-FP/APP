@@ -114,6 +114,10 @@
   const user = window.__getCurrentUser?.();
   if (!user) return;
 
+  const _NOMBRES = { 'Ruben Beltran': 'Rubén Beltrán' };
+  const _fixNombre = n => _NOMBRES[n] ?? n;
+  user.nombre = _fixNombre(user.nombre);
+
   const ROL_LABEL = { admin_ppa: 'AdminPPA', delegado: 'Delegado', jefe_equipo: 'Jefe de Equipo' };
 
   // Iniciales

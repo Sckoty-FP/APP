@@ -96,6 +96,8 @@ async function loadView(rawHash) {
       </div>`;
   } finally {
     main.classList.remove('loading');
+    main.classList.add('view-entering');
+    setTimeout(() => main.classList.remove('view-entering'), 300);
   }
 
   // Actualizar nav activo (solo en rutas protegidas)

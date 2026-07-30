@@ -4,11 +4,11 @@
  */
 
 import { getSupabase } from './supabase.js';
-import { LABELS_ESTADO } from './config.js';
+import { LABELS_ESTADO, corregirNombre } from './config.js';
 
 // ── Expedientes ────────────────────────────────────────────────
 
-export async function listarExpedientes({ estado, busqueda, limit, jefeId, fechaDesde, fechaHasta } = {}) {
+export async function listarExpedientes({ estado, estadoIn, busqueda, limit, jefeId, fechaDesde, fechaHasta, creadoAntesDe } = {}) {
   const sb = getSupabase();
   let q = sb
     .from('expedientes')
@@ -20,10 +20,12 @@ export async function listarExpedientes({ estado, busqueda, limit, jefeId, fecha
     `)
     .order('fecha_creacion', { ascending: false });
 
-  if (estado)     q = q.eq('estado', estado);
-  if (jefeId)     q = q.eq('jefe_id', jefeId);
-  if (fechaDesde) q = q.gte('fecha_creacion', fechaDesde + 'T00:00:00');
-  if (fechaHasta) q = q.lte('fecha_creacion', fechaHasta + 'T23:59:59');
+  if (estadoIn?.length) q = q.in('estado', estadoIn);
+  else if (estado)      q = q.eq('estado', estado);
+  if (jefeId)           q = q.eq('jefe_id', jefeId);
+  if (fechaDesde)       q = q.gte('fecha_mantenimiento', fechaDesde);
+  if (fechaHasta)       q = q.lte('fecha_mantenimiento', fechaHasta);
+  if (creadoAntesDe)    q = q.lte('fecha_creacion', creadoAntesDe);
   if (busqueda) {
     const t = busqueda.trim();
     q = q.or(`instalacion.ilike.%${t}%,mantenimiento.ilike.%${t}%`);
@@ -32,7 +34,11 @@ export async function listarExpedientes({ estado, busqueda, limit, jefeId, fecha
 
   const { data, error } = await q;
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(e => ({
+    ...e,
+    jefe:    e.jefe    ? { ...e.jefe,    nombre: corregirNombre(e.jefe.nombre) }    : e.jefe,
+    tecnico: e.tecnico ? { ...e.tecnico, nombre: corregirNombre(e.tecnico.nombre) } : e.tecnico,
+  }));
 }
 
 export async function obtenerExpediente(id) {
@@ -99,7 +105,7 @@ export async function listarJefesEquipo() {
     .eq('activo', true)
     .order('nombre');
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(j => ({ ...j, nombre: corregirNombre(j.nombre) }));
 }
 
 export async function listarTecnicosPorJefe(jefeId) {

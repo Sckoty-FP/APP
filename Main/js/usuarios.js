@@ -4,6 +4,7 @@
  */
 
 import { getSupabase, getSupabaseCredentials } from './supabase.js';
+import { corregirNombre } from './config.js';
 
 // ── Listar ─────────────────────────────────────────────────────
 
@@ -15,7 +16,7 @@ export async function listarUsuarios() {
     .order('rol')
     .order('nombre');
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(u => ({ ...u, nombre: corregirNombre(u.nombre) }));
 }
 
 // ── Crear ──────────────────────────────────────────────────────

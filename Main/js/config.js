@@ -18,6 +18,25 @@ export const LABELS_ROL = {
   jefe_equipo: 'Jefe de Equipo',
 };
 
+// Antigüedad de un expediente abierto
+const ESTADOS_ABIERTOS = new Set(['pendiente', 'en_gestion', 'pendiente_revision']);
+
+export function calcularAntiguedad(fechaIso, estado) {
+  if (!ESTADOS_ABIERTOS.has(estado)) return null;
+  const dias = Math.floor((Date.now() - new Date(fechaIso)) / 86_400_000);
+  if (dias < 15) return { dias, color: 'var(--rescatada-accent)',  bg: 'var(--rescatada-bg)' };
+  if (dias < 30) return { dias, color: 'var(--warning)',            bg: '#FFF7ED' };
+  return               { dias, color: 'var(--danger)',             bg: 'var(--danger-bg)' };
+}
+
+// Correcciones visuales de nombres — solo display, sin tocar BD
+const NOMBRES_CORREGIDOS = {
+  'Ruben Beltran': 'Rubén Beltrán',
+};
+export function corregirNombre(nombre) {
+  return NOMBRES_CORREGIDOS[nombre] ?? nombre;
+}
+
 // Orden de agrupación para exportación PDF (Módulo G)
 export const ORDEN_ESTADO_PDF = [
   'pendiente',

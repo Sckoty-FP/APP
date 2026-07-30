@@ -48,11 +48,67 @@
     </div>
   </div>
 
+  <!-- Informe mensual (solo admin_ppa y delegado) -->
+  <div id="informe-mensual-section" style="display:none; margin-top:var(--s5);">
+    <div style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary); margin-bottom:var(--s3);">
+      Informe mensual
+    </div>
+    <div class="card" style="padding:var(--s4);">
+      <div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-bottom:var(--s3);">
+        Seleccioná el mes para generar el informe con KPIs, rendimiento por jefe, motivos y técnicos.
+      </div>
+      <div style="display:flex; gap:var(--s2); align-items:center; flex-wrap:wrap;">
+        <select id="informe-mes" style="
+          height:36px; padding:0 10px;
+          border:1.5px solid var(--border-strong); border-radius:var(--r-md);
+          background:var(--surface); color:var(--text-primary);
+          font-size:var(--text-xs); font-family:var(--font);
+          cursor:pointer;
+        ">
+          <option value="1">Enero</option>
+          <option value="2">Febrero</option>
+          <option value="3">Marzo</option>
+          <option value="4">Abril</option>
+          <option value="5">Mayo</option>
+          <option value="6">Junio</option>
+          <option value="7">Julio</option>
+          <option value="8">Agosto</option>
+          <option value="9">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+        <select id="informe-anio" style="
+          height:36px; padding:0 10px;
+          border:1.5px solid var(--border-strong); border-radius:var(--r-md);
+          background:var(--surface); color:var(--text-primary);
+          font-size:var(--text-xs); font-family:var(--font);
+          cursor:pointer;
+        "></select>
+        <button id="btn-generar-informe" style="
+          height:36px; padding:0 16px;
+          border-radius:var(--r-md);
+          border:none;
+          background:var(--brand); color:white;
+          font-size:var(--text-xs); font-weight:var(--weight-semi);
+          cursor:pointer; display:flex; align-items:center; gap:6px;
+          font-family:var(--font); transition:opacity var(--t-fast);
+        ">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          </svg>
+          Generar PDF
+        </button>
+      </div>
+      <div id="informe-feedback" style="display:none; margin-top:var(--s3); font-size:var(--text-xs);"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 (async function () {
-  const { obtenerKpiResumen, obtenerKpiTendencia } = await import('/js/estadisticas.js');
+  const { obtenerKpiResumen, obtenerKpiTendencia, obtenerInformeMensual } = await import('/js/estadisticas.js');
 
   // Cargar Chart.js desde CDN de forma dinámica
   async function loadChartJs() {
@@ -230,6 +286,64 @@
           <p style="color:var(--danger); font-size:var(--text-sm);">${err.message}</p>
         </div>`;
     }
+  }
+
+  // ── Informe mensual (admin_ppa y delegado) ────────────────────
+  const user = window.__getCurrentUser?.();
+  if (user?.rol === 'admin_ppa' || user?.rol === 'delegado') {
+    const section = document.getElementById('informe-mensual-section');
+    if (section) section.style.display = 'block';
+
+    // Rellenar selector de año: año actual y 2 anteriores
+    const anioSelect = document.getElementById('informe-anio');
+    const anioActual = new Date().getFullYear();
+    for (let a = anioActual; a >= anioActual - 2; a--) {
+      const opt = document.createElement('option');
+      opt.value = a;
+      opt.textContent = a;
+      anioSelect.appendChild(opt);
+    }
+
+    // Pre-seleccionar el mes anterior
+    const hoy       = new Date();
+    const mesAnterior = hoy.getMonth() === 0 ? 12 : hoy.getMonth();
+    const anioMes    = hoy.getMonth() === 0 ? anioActual - 1 : anioActual;
+    document.getElementById('informe-mes').value = mesAnterior;
+    anioSelect.value = anioMes;
+
+    // Botón generar
+    document.getElementById('btn-generar-informe')?.addEventListener('click', async () => {
+      const mes    = parseInt(document.getElementById('informe-mes').value, 10);
+      const anio   = parseInt(anioSelect.value, 10);
+      const btn    = document.getElementById('btn-generar-informe');
+      const fb     = document.getElementById('informe-feedback');
+      const MESES  = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      const etiq   = `${MESES[mes]} ${anio}`;
+
+      btn.textContent = 'Generando…';
+      btn.disabled    = true;
+      fb.style.display = 'none';
+
+      try {
+        const datos = await obtenerInformeMensual(anio, mes);
+        if ((datos.kpi.total ?? 0) === 0) {
+          fb.style.color   = 'var(--warning)';
+          fb.textContent   = `No hay expedientes en ${etiq}.`;
+          fb.style.display = 'block';
+        } else {
+          const { exportarInformeMensual } = await import('/js/exportacion.js');
+          await exportarInformeMensual(datos, etiq);
+        }
+      } catch (err) {
+        fb.style.color   = 'var(--danger)';
+        fb.textContent   = `Error: ${err.message}`;
+        fb.style.display = 'block';
+      } finally {
+        btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Generar PDF`;
+        btn.disabled = false;
+      }
+    });
   }
 })();
 </script>

@@ -19,3 +19,24 @@ export async function obtenerKpiTendencia(meses = 6) {
   if (error) throw error;
   return data ?? [];
 }
+
+export async function obtenerInformeMensual(anio, mes) {
+  const sb = getSupabase();
+  const [kpiRes, jefesRes, motivosRes, tecnicosRes] = await Promise.all([
+    sb.rpc('kpi_mes',          { p_anio: anio, p_mes: mes }),
+    sb.rpc('kpi_jefes_mes',    { p_anio: anio, p_mes: mes }),
+    sb.rpc('kpi_motivos_mes',  { p_anio: anio, p_mes: mes }),
+    sb.rpc('kpi_tecnicos_mes', { p_anio: anio, p_mes: mes }),
+  ]);
+  if (kpiRes.error)      throw kpiRes.error;
+  if (jefesRes.error)    throw jefesRes.error;
+  if (motivosRes.error)  throw motivosRes.error;
+  if (tecnicosRes.error) throw tecnicosRes.error;
+
+  return {
+    kpi:      kpiRes.data[0]    ?? {},
+    jefes:    jefesRes.data     ?? [],
+    motivos:  motivosRes.data   ?? [],
+    tecnicos: tecnicosRes.data  ?? [],
+  };
+}

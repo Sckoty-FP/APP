@@ -9,7 +9,7 @@
 import { initSupabase, getSupabase } from './supabase.js';
 import { navigate } from './router.js';
 import { iniciarNotificaciones, detenerNotificaciones, getExpedientesConNotif } from './notificaciones.js';
-import { renderNav } from './ui/nav.js';
+import { renderNav, renderSidebar } from './ui/nav.js';
 
 // ── Estado en memoria ──────────────────────────────────────────
 let _currentUser  = null;   // { id, nombre, email, rol, activo }
@@ -49,8 +49,9 @@ async function loadProfile(authUser) {
 // ── Actualizar UI del header según usuario logueado ────────────
 function updateHeaderUser() {
   if (!_currentUser) return;
-  // Re-renderizar nav con el rol correcto (oculta "Nuevo" para no-supervisores)
+  // Re-renderizar nav (móvil) y sidebar (escritorio) con el rol correcto
   renderNav(location.hash || '#/expedientes', _currentUser.rol);
+  renderSidebar(location.hash || '#/expedientes', _currentUser.rol, _currentUser);
 
   const titleEl  = document.getElementById('page-title');
   const actionEl = document.getElementById('header-action');
@@ -137,10 +138,12 @@ function updateHeaderUser() {
 
 // ── Mostrar / ocultar shell según ruta ─────────────────────────
 export function setShellVisible(visible) {
-  const header = document.getElementById('app-header');
-  const nav    = document.getElementById('app-nav');
-  if (header) header.style.display = visible ? '' : 'none';
-  if (nav)    nav.style.display    = visible ? '' : 'none';
+  const header  = document.getElementById('app-header');
+  const nav     = document.getElementById('app-nav');
+  const sidebar = document.getElementById('app-sidebar');
+  if (header)  header.style.display  = visible ? '' : 'none';
+  if (nav)     nav.style.display     = visible ? '' : 'none';
+  if (sidebar) sidebar.style.display = visible ? '' : 'none';
 }
 
 // ── Login ──────────────────────────────────────────────────────
@@ -187,29 +190,28 @@ export async function initAuth() {
   const sb = getSupabase();
 
   // Escuchar cambios de sesión
+  // IMPORTANTE: solo reaccionar a eventos explícitos, no a INITIAL_SESSION
+  // (la sesión inicial se maneja abajo con getSession)
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_OUT' || !session) {
+    if (event === 'SIGNED_OUT') {
       _currentUser = null;
       setShellVisible(false);
       navigate('#/login');
       return;
     }
 
-    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-      if (!_currentUser) {
-        try {
-          await loadProfile(session.user);
-          updateHeaderUser();
-          setShellVisible(true);
-          iniciarNotificaciones();
-          // Solo redirigir si estamos en login
-          if (location.hash === '#/login' || location.hash === '') {
-            redirectByRol(_currentUser.rol);
-          }
-        } catch (err) {
-          console.error('[auth]', err.message);
-          await sb.auth.signOut();
+    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !_currentUser) {
+      try {
+        await loadProfile(session.user);
+        updateHeaderUser();
+        setShellVisible(true);
+        iniciarNotificaciones();
+        if (location.hash === '#/login' || location.hash === '') {
+          redirectByRol(_currentUser.rol);
         }
+      } catch (err) {
+        console.error('[auth]', err.message);
+        await sb.auth.signOut();
       }
     }
   });

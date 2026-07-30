@@ -72,3 +72,51 @@ export function updateNavActive(hash) {
     el.classList.toggle('active', el.dataset.route === hash);
   });
 }
+
+const LABELS_ROL_NAV = {
+  admin_ppa:   'AdminPPA',
+  delegado:    'Delegado',
+  jefe_equipo: 'Jefe de Equipo',
+};
+
+export function renderSidebar(activeRoute, rol, user) {
+  const sidebar = document.getElementById('app-sidebar');
+  if (!sidebar) return;
+
+  const active  = activeRoute || '#/expedientes';
+  const allowed = NAV_ROUTES[rol] ?? NAV_ROUTES.admin_ppa;
+  const items   = NAV_ITEMS.filter(i => allowed.includes(i.route));
+
+  const userHtml = user ? (() => {
+    const initials = user.nombre.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+    return `
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar">${initials}</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">${user.nombre}</div>
+          <div class="sidebar-user-role">${LABELS_ROL_NAV[user.rol] ?? user.rol}</div>
+        </div>
+      </div>`;
+  })() : '';
+
+  sidebar.innerHTML = `
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">S</div>
+      <div>
+        <div class="sidebar-logo-title">SGR · PPA</div>
+        <div class="sidebar-logo-sub">Gestión de rescate</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      ${items.map(item => `
+        <a href="${item.route}"
+           data-route="${item.route}"
+           class="sidebar-item${item.route === active ? ' active' : ''}">
+          ${item.icon}
+          <span>${item.label}</span>
+        </a>`).join('')}
+    </nav>
+    ${userHtml}
+    <div class="sidebar-credit">Programado por Elias Blanco</div>
+  `;
+}

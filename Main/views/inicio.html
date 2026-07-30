@@ -27,6 +27,57 @@
     <div class="skeleton" style="height:72px; border-radius:var(--r-md);"></div>
   </div>
 
+  <!-- Pendiente de mi acción -->
+  <div id="mi-accion-section" style="display:none; margin-bottom:var(--s5);">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s3);">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary);">Pendiente de tu acción</div>
+        <span id="mi-accion-badge" style="
+          display:none; min-width:18px; height:18px;
+          border-radius:var(--r-full);
+          background:var(--danger); color:white;
+          font-size:10px; font-weight:700;
+          align-items:center; justify-content:center; padding:0 5px;
+        "></span>
+      </div>
+      <button id="mi-accion-ver-todos"
+              style="font-size:var(--text-xs); color:var(--brand); font-weight:var(--weight-semi); background:none; border:none; cursor:pointer;">
+        Ver todos →
+      </button>
+    </div>
+    <div id="mi-accion-list" class="card-list">
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+  </div>
+
+  <!-- Sin movimiento +15 días — solo delegado -->
+  <div id="sin-movimiento-section" style="display:none; margin-bottom:var(--s5);">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s2);">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary);">Sin movimiento · +15 días</div>
+        <span id="sin-movimiento-badge" style="
+          display:none; min-width:18px; height:18px;
+          border-radius:var(--r-full);
+          background:var(--warning); color:white;
+          font-size:10px; font-weight:700;
+          align-items:center; justify-content:center; padding:0 5px;
+        "></span>
+      </div>
+      <button id="sin-movimiento-ver-todos"
+              style="font-size:var(--text-xs); color:var(--brand); font-weight:var(--weight-semi); background:none; border:none; cursor:pointer;">
+        Ver todos →
+      </button>
+    </div>
+    <div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-bottom:var(--s3);">
+      Casos pendientes o en gestión que llevan más de 15 días sin avance
+    </div>
+    <div id="sin-movimiento-list" class="card-list">
+      <div class="skeleton skeleton-card"></div>
+      <div class="skeleton skeleton-card"></div>
+    </div>
+  </div>
+
   <!-- Recientes -->
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s3);">
     <div style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary);">Recientes</div>
@@ -45,15 +96,22 @@
 
 <script>
 (async function () {
-  const { listarExpedientes, ESTADO_LABEL } = await import('/js/expedientes.js');
-  const { obtenerKpiResumen }               = await import('/js/estadisticas.js');
+  const [expMod, statsMod, cfgMod] = await Promise.all([
+    import('/js/expedientes.js'),
+    import('/js/estadisticas.js'),
+    import('/js/config.js'),
+  ]);
+  const { listarExpedientes, ESTADO_LABEL } = expMod;
+  const { obtenerKpiResumen }               = statsMod;
+  const { calcularAntiguedad, corregirNombre } = cfgMod;
 
   const user = window.__getCurrentUser?.();
 
   // Saludo
   const ROL_LABEL = { admin_ppa: 'AdminPPA', delegado: 'Delegado', jefe_equipo: 'Jefe de Equipo' };
   if (user) {
-    document.getElementById('saludo-nombre').textContent = `Hola, ${user.nombre.split(' ')[0]}`;
+    const nombre = corregirNombre(user.nombre);
+    document.getElementById('saludo-nombre').textContent = `Hola, ${nombre.split(' ')[0]}`;
     document.getElementById('saludo-rol').textContent    = ROL_LABEL[user.rol] ?? user.rol;
   }
 
@@ -69,9 +127,22 @@
       </div>`;
   }
 
-  // Tarjeta expediente (idéntica a la de expedientes.html)
+  // Tarjeta expediente
   function tarjeta(e) {
-    const fecha = new Date(e.fecha_creacion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    const fechaBase = e.fecha_mantenimiento
+      ? new Date(e.fecha_mantenimiento + 'T00:00:00')
+      : new Date(e.fecha_creacion);
+    const fecha = fechaBase.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
+    const edad  = calcularAntiguedad(e.fecha_creacion, e.estado);
+    const edadHtml = edad
+      ? `<span style="
+           font-size:10px; font-weight:700; padding:1px 6px;
+           border-radius:var(--r-full);
+           background:${edad.bg}; color:${edad.color};
+           border:1px solid ${edad.color}33;
+           white-space:nowrap;
+         ">${edad.dias}d</span>`
+      : '';
     return `
       <div class="card card-expediente estado-${e.estado}"
            role="button" tabindex="0"
@@ -79,16 +150,16 @@
            onkeydown="if(event.key==='Enter')window.__navigate('#/expediente?id=${e.id}')">
         <div class="card-accent"></div>
         <div class="card-body">
-          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:4px;">
-            <div style="flex:1; min-width:0;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">
+            <div style="flex:1;min-width:0;">
               <div class="card-num">#${e.mantenimiento}</div>
               <div class="card-title">${e.instalacion}</div>
             </div>
-            <span class="badge badge-${e.estado}" style="flex-shrink:0; margin-top:2px;">${ESTADO_LABEL[e.estado]}</span>
+            <span class="badge badge-${e.estado}" style="flex-shrink:0;margin-top:2px;">${ESTADO_LABEL[e.estado]}</span>
           </div>
           <div class="card-footer">
             <span class="card-meta">${e.jefe?.nombre ?? '—'}</span>
-            <span class="card-meta">${fecha}</span>
+            <span style="display:flex;align-items:center;gap:6px;">${edadHtml}<span class="card-meta">${fecha}</span></span>
           </div>
         </div>
         <svg class="card-chevron" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -97,23 +168,96 @@
       </div>`;
   }
 
-  // Cargar en paralelo
+  // ── Config "mi acción" por rol ────────────────────────────
+  // query: parámetros para listarExpedientes
+  // link:  destino de "Ver todos"
+  const MI_ACCION = {
+    jefe_equipo: {
+      query: { estadoIn: ['pendiente', 'en_gestion'] },
+      link:  '#/expedientes?estado=pendiente',
+    },
+    admin_ppa: {
+      query: { estado: 'pendiente_revision' },
+      link:  '#/expedientes?estado=pendiente_revision',
+    },
+    delegado: {
+      query: { estado: 'pendiente_revision' },
+      link:  '#/expedientes?estado=pendiente_revision',
+    },
+  };
+
+  const accionCfg   = user ? MI_ACCION[user.rol] : null;
+  const esDelegado  = user?.rol === 'delegado';
+  const hace15Dias  = new Date(Date.now() - 15 * 86_400_000).toISOString();
+
+  // Mostrar sección "mi acción"
+  const accionSection = document.getElementById('mi-accion-section');
+  if (accionCfg && accionSection) {
+    accionSection.style.display = 'block';
+    document.getElementById('mi-accion-ver-todos')
+      ?.addEventListener('click', () => window.__navigate(accionCfg.link));
+  }
+
+  // Mostrar sección "sin movimiento" solo para delegado
+  const sinMovSection = document.getElementById('sin-movimiento-section');
+  if (esDelegado && sinMovSection) {
+    sinMovSection.style.display = 'block';
+    document.getElementById('sin-movimiento-ver-todos')
+      ?.addEventListener('click', () => window.__navigate('#/expedientes'));
+  }
+
+  // ── Cargar todo en paralelo ────────────────────────────────
   try {
-    const [resumen, recientes] = await Promise.all([
+    const queries = [
       obtenerKpiResumen(),
       listarExpedientes({ limit: 5 }),
-    ]);
+    ];
+    if (accionCfg) {
+      queries.push(listarExpedientes({ ...accionCfg.query, limit: 5 }));
+    }
+    if (esDelegado) {
+      queries.push(listarExpedientes({
+        estadoIn:      ['pendiente', 'en_gestion'],
+        creadoAntesDe: hace15Dias,
+        limit:         5,
+      }));
+    }
 
+    const [resumen, recientes, miAccion, sinMovimiento] = await Promise.all(queries);
+
+    // ── KPIs ────────────────────────────────────────────────
     const activos = (resumen.pendiente || 0) + (resumen.en_gestion || 0) + (resumen.pend_revision || 0);
-
     const kpiMini = document.getElementById('kpi-mini');
     if (kpiMini) {
       kpiMini.innerHTML =
-        miniCard('Total', resumen.total || 0, 'var(--text-primary)') +
-        miniCard('Activos', activos, 'var(--gestion-accent)') +
+        miniCard('Total',      resumen.total    || 0, 'var(--text-primary)')   +
+        miniCard('Activos',    activos,               'var(--gestion-accent)') +
         miniCard('Rescatados', resumen.rescatada || 0, 'var(--rescatada-accent)');
     }
 
+    // ── Mi acción ────────────────────────────────────────────
+    if (accionCfg && miAccion !== undefined) {
+      renderSeccion({
+        listId:  'mi-accion-list',
+        badgeId: 'mi-accion-badge',
+        items:   miAccion,
+        badgeColor: 'var(--danger)',
+        emptyMsg: '¡Todo al día! No tenés casos pendientes de tu atención.',
+      });
+    }
+
+    // ── Sin movimiento (solo delegado) ───────────────────────
+    if (esDelegado && sinMovimiento !== undefined) {
+      renderSeccion({
+        listId:  'sin-movimiento-list',
+        badgeId: 'sin-movimiento-badge',
+        items:   sinMovimiento,
+        badgeColor: 'var(--warning)',
+        emptyMsg: 'Todos los casos avanzan dentro del plazo. Sin alertas por ahora.',
+      });
+    }
+
+    // ── Recientes ────────────────────────────────────────────
     const listEl = document.getElementById('recientes-list');
     if (listEl) {
       listEl.innerHTML = recientes.length
@@ -123,11 +267,45 @@
              <div class="empty-body">Aún no hay expedientes registrados.</div>
            </div>`;
     }
+
   } catch (err) {
     const kpiMini = document.getElementById('kpi-mini');
     if (kpiMini) {
       kpiMini.innerHTML = `
         <div style="grid-column:1/-1; color:var(--danger); font-size:var(--text-sm);">${err.message}</div>`;
+    }
+  }
+
+  // ── Helper: renderizar una sección de lista ───────────────
+  function renderSeccion({ listId, badgeId, items, badgeColor, emptyMsg }) {
+    const badge  = document.getElementById(badgeId);
+    const listEl = document.getElementById(listId);
+    if (!listEl) return;
+
+    if (items.length > 0) {
+      if (badge) {
+        badge.textContent      = items.length;
+        badge.style.display    = 'inline-flex';
+        badge.style.background = badgeColor;
+      }
+      listEl.innerHTML = items.map(tarjeta).join('');
+    } else {
+      if (badge) badge.style.display = 'none';
+      listEl.innerHTML = `
+        <div style="
+          display:flex; align-items:center; gap:10px;
+          padding:var(--s3) var(--s4);
+          background:var(--rescatada-bg);
+          border:1px solid var(--rescatada-border);
+          border-radius:var(--r-lg);
+        ">
+          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="var(--rescatada-accent)" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--rescatada-text);">
+            ${emptyMsg}
+          </span>
+        </div>`;
     }
   }
 })();

@@ -264,6 +264,151 @@ export async function exportarKPIs(kpis, tendencia, extras = {}) {
   doc.save(`informe_${_fechaArchivo()}.pdf`);
 }
 
+// ── Informe mensual ─────────────────────────────────────────────
+
+export async function exportarInformeMensual(datos, etiqueta) {
+  const JsPDF = await cargarJsPDF();
+  const doc   = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const { kpi, jefes, motivos, tecnicos } = datos;
+
+  // ── Página — cabecera ─────────────────────────────────────────
+  let y = cabecera(doc, `Informe mensual — ${etiqueta}`, 'Análisis de PPA por período');
+
+  // ── KPI boxes ────────────────────────────────────────────────
+  const finalizados = (kpi.rescatada || 0) + (kpi.cerrada || 0);
+  const tasa = finalizados > 0
+    ? `${Math.round(((kpi.rescatada || 0) / finalizados) * 100)}%`
+    : '—';
+  const activos = (kpi.pendiente || 0) + (kpi.en_gestion || 0) + (kpi.pend_revision || 0);
+
+  const boxes = [
+    { label: 'Total expedientes', valor: kpi.total     ?? 0 },
+    { label: 'Activos',           valor: activos             },
+    { label: 'Rescatadas',        valor: kpi.rescatada ?? 0 },
+    { label: 'Tasa de rescate',   valor: tasa                },
+  ];
+
+  const boxW = 42, boxH = 20, gap = 4;
+  boxes.forEach((b, i) => {
+    const x = 14 + i * (boxW + gap);
+    doc.setFillColor(252, 245, 245);
+    doc.roundedRect(x, y, boxW, boxH, 2, 2, 'F');
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(92, 10, 10);
+    doc.text(String(b.valor), x + boxW / 2, y + 11, { align: 'center' });
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(b.label, x + boxW / 2, y + 17, { align: 'center' });
+  });
+
+  y += boxH + 10;
+
+  // ── Tabla: Jefes de equipo ────────────────────────────────────
+  _seccionTitulo(doc, 'Rendimiento por jefe de equipo', y);
+  y += 5;
+
+  doc.autoTable({
+    startY: y,
+    head: [['Jefe de equipo', 'Total', 'Rescatadas', 'Cerradas', 'Activos']],
+    body: jefes.length
+      ? jefes.map(j => [j.jefe_nombre, j.total, j.rescatada, j.cerrada, j.activos])
+      : [['Sin datos para este período', '', '', '', '']],
+    styles:           { fontSize: 8, cellPadding: 3 },
+    headStyles:       { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [252, 245, 245] },
+    columnStyles: {
+      0: { cellWidth: 80 },
+      1: { cellWidth: 22, halign: 'center' },
+      2: { cellWidth: 27, halign: 'center' },
+      3: { cellWidth: 22, halign: 'center' },
+      4: { cellWidth: 22, halign: 'center' },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  y = doc.lastAutoTable.finalY + 10;
+
+  // ── Tabla: Motivos de fallo ───────────────────────────────────
+  _seccionTitulo(doc, 'Motivos de fallo más frecuentes', y);
+  y += 5;
+
+  doc.autoTable({
+    startY: y,
+    head: [['Motivo de fallo', 'Total', 'Rescatadas', 'Cerradas']],
+    body: motivos.length
+      ? motivos.map(m => [m.motivo_nombre, m.total, m.rescatada, m.cerrada])
+      : [['Sin datos para este período', '', '', '']],
+    styles:           { fontSize: 8, cellPadding: 3 },
+    headStyles:       { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [252, 245, 245] },
+    columnStyles: {
+      0: { cellWidth: 105 },
+      1: { cellWidth: 22, halign: 'center' },
+      2: { cellWidth: 27, halign: 'center' },
+      3: { cellWidth: 22, halign: 'center' },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  y = doc.lastAutoTable.finalY + 10;
+
+  // ── Tabla: Técnicos ───────────────────────────────────────────
+  _seccionTitulo(doc, 'Análisis por técnico', y);
+  y += 5;
+
+  doc.autoTable({
+    startY: y,
+    head: [['Técnico', 'Jefe', 'Total', 'Resc.', 'Cerr.', 'Motivo más frecuente']],
+    body: tecnicos.length
+      ? tecnicos.map(t => [
+          t.tecnico_nombre,
+          t.jefe_nombre,
+          t.total,
+          t.rescatada,
+          t.cerrada,
+          t.motivo_frecuente ?? '—',
+        ])
+      : [['Sin técnicos asignados en este período', '', '', '', '', '']],
+    styles:           { fontSize: 7.5, cellPadding: 2.5 },
+    headStyles:       { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [252, 245, 245] },
+    columnStyles: {
+      0: { cellWidth: 42 },
+      1: { cellWidth: 38 },
+      2: { cellWidth: 14, halign: 'center' },
+      3: { cellWidth: 14, halign: 'center' },
+      4: { cellWidth: 14, halign: 'center' },
+      5: { cellWidth: 55 },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  // ── Pie de página ─────────────────────────────────────────────
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7);
+    doc.setTextColor(160, 160, 160);
+    doc.text(`Página ${i} de ${pageCount}`, 196, 290, { align: 'right' });
+  }
+
+  const slug = etiqueta.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  doc.save(`informe_mensual_${slug}_${_fechaArchivo()}.pdf`);
+}
+
+function _seccionTitulo(doc, texto, y) {
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(40, 40, 40);
+  doc.text(texto, 14, y);
+  doc.setDrawColor(220, 38, 38);
+  doc.setLineWidth(0.4);
+  doc.line(14, y + 1.5, 196, y + 1.5);
+}
+
 function hexToRgb(hex) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);

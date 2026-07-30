@@ -182,11 +182,13 @@
 
 <script>
 (async function () {
-  const [expMod, notifMod] = await Promise.all([
+  const [expMod, notifMod, cfgMod] = await Promise.all([
     import('/js/expedientes.js'),
     import('/js/notificaciones.js'),
+    import('/js/config.js'),
   ]);
   const { listarExpedientes, listarJefesEquipo, ESTADO_LABEL } = expMod;
+  const { calcularAntiguedad } = cfgMod;
   const { getExpedientesConNotif, limpiarNotifExpediente }     = notifMod;
   const rol = window.__getCurrentRol?.();
 
@@ -339,9 +341,19 @@
     const fechaBase = e.fecha_mantenimiento
       ? new Date(e.fecha_mantenimiento + 'T00:00:00')
       : new Date(e.fecha_creacion);
-    const fecha = fechaBase.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
-    const tecnico = e.tecnico ? `<span style="color:var(--text-tertiary)"> · ${e.tecnico.nombre}</span>` : '';
+    const fecha    = fechaBase.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' });
+    const tecnico  = e.tecnico ? `<span style="color:var(--text-tertiary)"> · ${e.tecnico.nombre}</span>` : '';
     const dotNotif = `<span id="card-notif-${e.id}" class="card-notif-dot" style="${conNotif ? '' : 'display:none'}">!</span>`;
+    const edad     = calcularAntiguedad(e.fecha_creacion, e.estado);
+    const edadHtml = edad
+      ? `<span style="
+           font-size:10px; font-weight:700; padding:1px 6px;
+           border-radius:var(--r-full);
+           background:${edad.bg}; color:${edad.color};
+           border:1px solid ${edad.color}33;
+           white-space:nowrap;
+         ">${edad.dias}d</span>`
+      : '';
     return `
       <div class="card card-expediente estado-${e.estado}"
            role="button" tabindex="0"
@@ -359,7 +371,7 @@
           <div class="card-motivo">${e.motivo_fallo?.nombre ?? e.motivo ?? '—'}</div>
           <div class="card-footer">
             <span class="card-meta">${e.jefe?.nombre ?? '—'}${tecnico}</span>
-            <span class="card-meta">${fecha}</span>
+            <span style="display:flex;align-items:center;gap:6px;">${edadHtml}<span class="card-meta">${fecha}</span></span>
           </div>
         </div>
         <svg class="card-chevron" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
