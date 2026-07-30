@@ -12,8 +12,9 @@ import { iniciarNotificaciones, detenerNotificaciones, getExpedientesConNotif } 
 import { renderNav, renderSidebar } from './ui/nav.js';
 
 // ── Estado en memoria ──────────────────────────────────────────
-let _currentUser  = null;   // { id, nombre, email, rol, activo }
-let _initialized  = false;
+let _currentUser    = null;   // { id, nombre, email, rol, activo }
+let _initialized    = false;
+let _profileLoading = false;  // evita inicializaciones concurrentes
 
 // ── Redirección por rol ────────────────────────────────────────
 function redirectByRol(rol) {
@@ -200,7 +201,8 @@ export async function initAuth() {
       return;
     }
 
-    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !_currentUser) {
+    if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !_currentUser && !_profileLoading) {
+      _profileLoading = true;
       try {
         await loadProfile(session.user);
         updateHeaderUser();
@@ -212,8 +214,9 @@ export async function initAuth() {
         console.error('[auth] error al cargar perfil:', err.message);
         await sb.auth.signOut();
         return;
+      } finally {
+        _profileLoading = false;
       }
-      // Notificaciones fuera del catch crítico: un error aquí no debe desloguear
       iniciarNotificaciones();
     }
   });
