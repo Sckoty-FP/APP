@@ -1,26 +1,86 @@
-<!-- Estadísticas — KPIs y gráficos -->
+<!-- Estadísticas — filtros (alcance × período), KPIs, gráficos y rankings (v4) -->
+<style>
+  .est-filtros { display:grid; grid-template-columns:1fr 1fr; gap:var(--s2); }
+  .est-filtros .select { height:40px; font-size:var(--text-sm); }
+  .est-filtros label { display:block; font-size:10px; font-weight:var(--weight-semi); color:var(--text-tertiary);
+                       text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; }
+  .est-periodo { display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--s2); grid-column:1/-1; }
+  @media (min-width: 1024px) {
+    .est-filtros { grid-template-columns:1fr 1fr 2fr auto; align-items:end; }
+    .est-periodo { grid-column:auto; }
+    .est-kpis    { grid-template-columns:repeat(4, 1fr) !important; }
+  }
+  .est-titulo { font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary); margin-bottom:var(--s3); }
+  .est-tabla-wrap { overflow-x:auto; margin:0 calc(var(--s4) * -1); padding:0 var(--s4); }
+  .est-tabla { width:100%; border-collapse:collapse; font-size:var(--text-xs); }
+  .est-tabla th { text-align:left; font-weight:var(--weight-semi); color:var(--text-tertiary); text-transform:uppercase;
+                  letter-spacing:0.04em; font-size:10px; padding:6px 8px; border-bottom:1px solid var(--border-strong); white-space:nowrap; }
+  .est-tabla td { padding:8px; border-bottom:1px solid var(--border); color:var(--text-secondary); vertical-align:top; }
+  .est-tabla td.num, .est-tabla th.num { text-align:center; white-space:nowrap; }
+  .est-tabla td.nombre { color:var(--text-primary); font-weight:var(--weight-semi); }
+  .est-tabla tr.clicable { cursor:pointer; }
+  .est-tabla tr.clicable:hover td { background:var(--brand-light); }
+  .est-pos { display:inline-flex; width:20px; height:20px; border-radius:50%; align-items:center; justify-content:center;
+             background:var(--brand-light); color:var(--brand-dark); font-weight:var(--weight-bold); font-size:10px; }
+  .est-mas { margin-top:var(--s2); background:none; border:none; color:var(--brand); font-size:var(--text-xs);
+             font-weight:var(--weight-semi); cursor:pointer; font-family:var(--font); padding:4px 0; }
+  .est-card { padding:var(--s4); margin-bottom:var(--s4); }
+  .est-card:active { transform:none; }
+</style>
+
 <div style="padding: var(--s4); padding-bottom: 80px;">
 
-  <!-- Botón exportar -->
-  <div style="display:flex; justify-content:flex-end; margin-bottom:var(--s3);">
-    <button id="btn-exportar-stats" style="
-      height:36px; padding:0 14px;
-      border-radius:var(--r-md);
-      border:1.5px solid var(--border-strong);
-      background:var(--surface); color:var(--text-secondary);
-      font-size:var(--text-xs); font-weight:var(--weight-semi);
-      cursor:pointer; display:flex; align-items:center; gap:6px;
-      font-family:var(--font); transition:all var(--t-fast);
-    ">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-      </svg>
-      Exportar PDF
-    </button>
+  <!-- Filtros -->
+  <div class="card est-card">
+    <div class="est-filtros">
+      <div>
+        <label for="f-jefe">Jefe de equipo</label>
+        <select id="f-jefe" class="select"><option value="">Todos los jefes</option></select>
+      </div>
+      <div>
+        <label for="f-tecnico">Técnico</label>
+        <select id="f-tecnico" class="select"><option value="">Todos los técnicos</option></select>
+      </div>
+      <div class="est-periodo">
+        <div>
+          <label for="f-periodo">Período</label>
+          <select id="f-periodo" class="select">
+            <option value="acumulado">Acumulado</option>
+            <option value="anio">Año</option>
+            <option value="mes">Mes</option>
+          </select>
+        </div>
+        <div>
+          <label for="f-anio">Año</label>
+          <select id="f-anio" class="select" disabled></select>
+        </div>
+        <div>
+          <label for="f-mes">Mes</label>
+          <select id="f-mes" class="select" disabled></select>
+        </div>
+      </div>
+      <div>
+        <button id="btn-pdf" style="
+          height:40px; padding:0 16px; width:100%;
+          border-radius:var(--r-md); border:none;
+          background:var(--brand); color:white;
+          font-size:var(--text-xs); font-weight:var(--weight-semi);
+          cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+          font-family:var(--font); white-space:nowrap;
+        ">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          </svg>
+          <span>Generar PDF</span>
+        </button>
+      </div>
+    </div>
+    <div id="est-etiqueta" style="margin-top:var(--s3); font-size:var(--text-xs); color:var(--text-tertiary);"></div>
+    <div id="est-feedback" style="display:none; margin-top:var(--s2); font-size:var(--text-xs);"></div>
   </div>
 
-  <!-- Grid KPIs -->
-  <div id="kpi-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); margin-bottom:var(--s5);">
+  <!-- KPIs -->
+  <div id="kpi-grid" class="est-kpis" style="display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); margin-bottom:var(--s4);">
     <div class="skeleton" style="height:88px; border-radius:var(--r-lg);"></div>
     <div class="skeleton" style="height:88px; border-radius:var(--r-lg);"></div>
     <div class="skeleton" style="height:88px; border-radius:var(--r-lg);"></div>
@@ -28,89 +88,69 @@
   </div>
 
   <!-- Distribución por estado -->
-  <div class="card" style="margin-bottom:var(--s4); padding:var(--s4);">
-    <div style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary); margin-bottom:var(--s4);">
-      Distribución por estado
-    </div>
+  <div class="card est-card">
+    <div class="est-titulo">Distribución por estado</div>
     <div id="donut-wrap" style="position:relative; height:180px; display:flex; align-items:center; justify-content:center;">
       <div class="skeleton" style="width:180px; height:180px; border-radius:50%;"></div>
     </div>
     <div id="donut-legend" style="display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:var(--s3);"></div>
   </div>
 
-  <!-- Tendencia mensual -->
-  <div class="card" style="padding:var(--s4);">
-    <div style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary); margin-bottom:var(--s4);">
-      Expedientes por mes
-    </div>
-    <div id="barras-wrap" style="position:relative; height:160px;">
-      <div class="skeleton" style="width:100%; height:160px; border-radius:var(--r-sm);"></div>
+  <!-- Por mes con acumulado -->
+  <div class="card est-card">
+    <div class="est-titulo">Expedientes por mes <span style="font-weight:400; color:var(--text-tertiary);">· línea = acumulado</span></div>
+    <div id="barras-wrap" style="position:relative; height:200px;">
+      <div class="skeleton" style="width:100%; height:200px; border-radius:var(--r-sm);"></div>
     </div>
   </div>
 
-  <!-- Informe mensual (solo admin_ppa y delegado) -->
-  <div id="informe-mensual-section" style="display:none; margin-top:var(--s5);">
-    <div style="font-size:var(--text-sm); font-weight:var(--weight-semi); color:var(--text-primary); margin-bottom:var(--s3);">
-      Informe mensual
-    </div>
-    <div class="card" style="padding:var(--s4);">
-      <div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-bottom:var(--s3);">
-        Seleccioná el mes para generar el informe con KPIs, rendimiento por jefe, motivos y técnicos.
-      </div>
-      <div style="display:flex; gap:var(--s2); align-items:center; flex-wrap:wrap;">
-        <select id="informe-mes" style="
-          height:36px; padding:0 10px;
-          border:1.5px solid var(--border-strong); border-radius:var(--r-md);
-          background:var(--surface); color:var(--text-primary);
-          font-size:var(--text-xs); font-family:var(--font);
-          cursor:pointer;
-        ">
-          <option value="1">Enero</option>
-          <option value="2">Febrero</option>
-          <option value="3">Marzo</option>
-          <option value="4">Abril</option>
-          <option value="5">Mayo</option>
-          <option value="6">Junio</option>
-          <option value="7">Julio</option>
-          <option value="8">Agosto</option>
-          <option value="9">Septiembre</option>
-          <option value="10">Octubre</option>
-          <option value="11">Noviembre</option>
-          <option value="12">Diciembre</option>
-        </select>
-        <select id="informe-anio" style="
-          height:36px; padding:0 10px;
-          border:1.5px solid var(--border-strong); border-radius:var(--r-md);
-          background:var(--surface); color:var(--text-primary);
-          font-size:var(--text-xs); font-family:var(--font);
-          cursor:pointer;
-        "></select>
-        <button id="btn-generar-informe" style="
-          height:36px; padding:0 16px;
-          border-radius:var(--r-md);
-          border:none;
-          background:var(--brand); color:white;
-          font-size:var(--text-xs); font-weight:var(--weight-semi);
-          cursor:pointer; display:flex; align-items:center; gap:6px;
-          font-family:var(--font); transition:opacity var(--t-fast);
-        ">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-          </svg>
-          Generar PDF
-        </button>
-      </div>
-      <div id="informe-feedback" style="display:none; margin-top:var(--s3); font-size:var(--text-xs);"></div>
-    </div>
+  <!-- Ranking técnicos -->
+  <div class="card est-card">
+    <div class="est-titulo">Ranking de técnicos <span style="font-weight:400; color:var(--text-tertiary);">· más expedientes</span></div>
+    <div id="rank-tecnicos"></div>
+  </div>
+
+  <!-- Ranking motivos -->
+  <div class="card est-card">
+    <div class="est-titulo">Errores más repetidos <span style="font-weight:400; color:var(--text-tertiary);">· y quiénes los generan</span></div>
+    <div id="rank-motivos"></div>
+  </div>
+
+  <!-- Por jefe (solo cuando hay más de uno) -->
+  <div id="sec-jefes" class="card est-card" style="display:none;">
+    <div class="est-titulo">Por jefe de equipo</div>
+    <div id="tabla-jefes"></div>
   </div>
 
 </div>
 
 <script>
 (async function () {
-  const { obtenerKpiResumen, obtenerKpiTendencia, obtenerInformeMensual } = await import('/js/estadisticas.js');
+  const [statsMod, filtrosMod] = await Promise.all([
+    import('/js/estadisticas.js'),
+    import('/js/estadisticas-filtros.js'),
+  ]);
+  const { obtenerEstadisticas, listarJefesFiltro, listarTecnicosFiltro } = statsMod;
+  const { paramsRpc, etiquetaFiltro, tasaRescate, formatMes, MESES } = filtrosMod;
 
-  // Cargar Chart.js desde CDN de forma dinámica
+  const user         = window.__getCurrentUser?.();
+  const esJefeEquipo = user?.rol === 'jefe_equipo';
+
+  const $ = id => document.getElementById(id);
+  const selJefe = $('f-jefe'), selTec = $('f-tecnico'), selPer = $('f-periodo'),
+        selAnio = $('f-anio'), selMes = $('f-mes');
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, ch =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
+  const ESTADOS = [
+    { key: 'en_gestion',    label: 'Acción Pendiente', color: '#2563EB' },
+    { key: 'pend_revision', label: 'Pte Aprobación',   color: '#9333EA' },
+    { key: 'rescatada',     label: 'Rescatada',        color: '#059669' },
+    { key: 'cerrada',       label: 'No Recuperable',   color: '#64748B' },
+  ];
+
+  // ── Chart.js ──────────────────────────────────────────────────
   async function loadChartJs() {
     if (window.Chart) return;
     await new Promise((resolve, reject) => {
@@ -121,228 +161,298 @@
       document.head.appendChild(s);
     });
   }
-
-  function formatMes(yyyymm) {
-    const [y, m] = yyyymm.split('-');
-    const nombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    return `${nombres[parseInt(m, 10) - 1]} '${y.slice(2)}`;
+  const charts = {};
+  function nuevoChart(key, wrapId, height, config) {
+    charts[key]?.destroy();
+    $(wrapId).innerHTML = `<canvas id="chart-${key}" style="max-height:${height}px;"></canvas>`;
+    charts[key] = new window.Chart($(`chart-${key}`).getContext('2d'), config);
   }
 
-  function kpiCard(label, value, colorVar, sub) {
+  // ── Selectores de período ────────────────────────────────────
+  const hoy = new Date();
+  for (let a = hoy.getFullYear(); a >= hoy.getFullYear() - 2; a--) selAnio.add(new Option(a, a));
+  MESES.forEach((m, i) => selMes.add(new Option(m, i + 1)));
+  selMes.value = hoy.getMonth() + 1;
+
+  function periodoActual() {
+    const tipo = selPer.value;
+    if (tipo === 'acumulado') return { tipo };
+    if (tipo === 'anio') return { tipo, anio: +selAnio.value };
+    return { tipo, anio: +selAnio.value, mes: +selMes.value };
+  }
+
+  function nombreSel(sel) {
+    return sel.value ? sel.options[sel.selectedIndex].textContent : null;
+  }
+
+  function filtroActual() {
+    return {
+      jefeId:        selJefe.value || null,
+      tecnicoId:     selTec.value  || null,
+      jefeNombre:    nombreSel(selJefe),
+      tecnicoNombre: nombreSel(selTec),
+      periodo:       periodoActual(),
+    };
+  }
+
+  // ── Opciones de jefe / técnico ────────────────────────────────
+  async function cargarTecnicos() {
+    const previo = selTec.value;
+    selTec.innerHTML = '<option value="">Todos los técnicos</option>';
+    try {
+      const ts = await listarTecnicosFiltro(selJefe.value || null);
+      ts.forEach(t => selTec.add(new Option(t.nombre, t.id)));
+      if (ts.some(t => t.id === previo)) selTec.value = previo;
+    } catch (err) {
+      console.error('[estadisticas] técnicos', err);
+    }
+  }
+
+  async function cargarJefes() {
+    if (esJefeEquipo) {
+      // Un jefe de equipo solo ve lo suyo (la BD lo fuerza igual en est_base)
+      selJefe.innerHTML = '';
+      selJefe.add(new Option(user.nombre, user.id));
+      selJefe.disabled = true;
+      return;
+    }
+    try {
+      const jefes = await listarJefesFiltro();
+      jefes.forEach(j => selJefe.add(new Option(j.nombre, j.id)));
+    } catch (err) {
+      console.error('[estadisticas] jefes', err);
+    }
+  }
+
+  // ── Render ────────────────────────────────────────────────────
+  function kpiCard(label, value, color, sub) {
     return `
-      <div style="
-        background:var(--surface); border-radius:var(--r-lg); padding:var(--s4);
-        border:1px solid var(--border); box-shadow:var(--shadow-xs);
-      ">
+      <div style="background:var(--surface); border-radius:var(--r-lg); padding:var(--s4);
+                  border:1px solid var(--border); box-shadow:var(--shadow-xs);">
         <div style="font-size:10px; font-weight:var(--weight-semi); color:var(--text-tertiary);
                     text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">${label}</div>
-        <div style="font-size:var(--text-3xl); font-weight:var(--weight-bold); color:${colorVar}; line-height:1;">${value}</div>
+        <div style="font-size:var(--text-3xl); font-weight:var(--weight-bold); color:${color}; line-height:1;">${value}</div>
         ${sub ? `<div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-top:4px;">${sub}</div>` : ''}
       </div>`;
   }
 
-  const ESTADOS = [
-    { key: 'en_gestion',    label: 'Acción Pendiente', color: '#2563EB' },
-    { key: 'pend_revision', label: 'Pte Aprobación',   color: '#9333EA' },
-    { key: 'rescatada',     label: 'Rescatada',        color: '#059669' },
-    { key: 'cerrada',       label: 'No Recuperable',   color: '#64748B' },
-  ];
+  function renderKpis(r) {
+    const activos     = Number(r.en_gestion || 0) + Number(r.pend_revision || 0);
+    const finalizados = Number(r.rescatada || 0) + Number(r.cerrada || 0);
+    const tasa        = tasaRescate(r);
+    $('kpi-grid').innerHTML =
+      kpiCard('Total', r.total || 0, 'var(--text-primary)') +
+      kpiCard('Activos', activos, 'var(--gestion-accent)') +
+      kpiCard('Rescatadas', r.rescatada || 0, 'var(--rescatada-accent)') +
+      kpiCard('Tasa rescate', tasa !== null ? `${tasa}%` : '—', 'var(--rescatada-accent)',
+        finalizados > 0 ? `sobre ${finalizados} finalizados` : 'sin casos finalizados');
+  }
 
-  let _kpisResumen   = null;
-  let _kpisTendencia = null;
+  function renderDonut(r) {
+    nuevoChart('donut', 'donut-wrap', 180, {
+      type: 'doughnut',
+      data: {
+        labels: ESTADOS.map(e => e.label),
+        datasets: [{ data: ESTADOS.map(e => r[e.key] || 0), backgroundColor: ESTADOS.map(e => e.color),
+                     borderWidth: 0, hoverOffset: 4 }],
+      },
+      options: { responsive: true, maintainAspectRatio: true, cutout: '65%',
+        plugins: { legend: { display: false },
+                   tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed}` } } } },
+    });
+    $('donut-legend').innerHTML = ESTADOS.map(e => `
+      <div style="display:flex; align-items:center; gap:5px; font-size:var(--text-xs); color:var(--text-secondary);">
+        <span style="width:8px; height:8px; border-radius:2px; background:${e.color}; flex-shrink:0;"></span>
+        ${e.label} <strong style="color:var(--text-primary);">${r[e.key] || 0}</strong>
+      </div>`).join('');
+  }
 
-  // Botón exportar
-  document.getElementById('btn-exportar-stats')?.addEventListener('click', async () => {
-    if (!_kpisResumen) return;
-    const btn = document.getElementById('btn-exportar-stats');
-    btn.textContent = 'Generando…';
+  function renderBarras(porMes) {
+    if (!porMes.length) {
+      charts.barras?.destroy(); charts.barras = null;
+      $('barras-wrap').innerHTML = '<p style="font-size:var(--text-xs); color:var(--text-tertiary); padding:var(--s4) 0;">Sin datos para este filtro.</p>';
+      return;
+    }
+    nuevoChart('barras', 'barras-wrap', 200, {
+      type: 'bar',
+      data: {
+        labels: porMes.map(m => formatMes(m.mes)),
+        datasets: [
+          { type: 'bar', label: 'Del mes', data: porMes.map(m => m.total), yAxisID: 'y',
+            backgroundColor: 'rgba(220,38,38,0.12)', borderColor: '#DC2626', borderWidth: 1.5, borderRadius: 4, order: 2 },
+          { type: 'line', label: 'Acumulado', data: porMes.map(m => m.acumulado), yAxisID: 'y2',
+            borderColor: '#0F172A', backgroundColor: '#0F172A', borderWidth: 1.5, pointRadius: 2, tension: 0.25, order: 1 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: true, labels: { boxWidth: 10, font: { size: 10 } } } },
+        scales: {
+          y:  { beginAtZero: true, position: 'left',  ticks: { precision: 0, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+          y2: { beginAtZero: true, position: 'right', ticks: { precision: 0, font: { size: 10 } }, grid: { display: false } },
+          x:  { ticks: { font: { size: 10 } }, grid: { display: false } },
+        },
+      },
+    });
+  }
+
+  const TOP = 10;
+  function tablaRanking(contId, filas, columnas, { onClick } = {}) {
+    const cont = $(contId);
+    if (!filas.length) {
+      cont.innerHTML = '<p style="font-size:var(--text-xs); color:var(--text-tertiary);">Sin datos para este filtro.</p>';
+      return;
+    }
+    let expandido = false;
+    const pintar = () => {
+      const visibles = expandido ? filas : filas.slice(0, TOP);
+      cont.innerHTML = `
+        <div class="est-tabla-wrap"><table class="est-tabla">
+          <thead><tr>${columnas.map(c => `<th class="${c.num ? 'num' : ''}">${c.titulo}</th>`).join('')}</tr></thead>
+          <tbody>${visibles.map((f, i) => `
+            <tr class="${onClick ? 'clicable' : ''}" data-i="${i}">
+              ${columnas.map(c => `<td class="${c.num ? 'num' : ''} ${c.clase ?? ''}">${c.valor(f, i)}</td>`).join('')}
+            </tr>`).join('')}
+          </tbody>
+        </table></div>
+        ${filas.length > TOP ? `<button class="est-mas">${expandido ? 'Ver menos' : `Ver los ${filas.length}`}</button>` : ''}`;
+      cont.querySelector('.est-mas')?.addEventListener('click', () => { expandido = !expandido; pintar(); });
+      if (onClick) cont.querySelectorAll('tr.clicable').forEach(tr =>
+        tr.addEventListener('click', () => onClick(visibles[+tr.dataset.i])));
+    };
+    pintar();
+  }
+
+  const pos = (_, i) => `<span class="est-pos">${i + 1}</span>`;
+
+  function renderRankings(d) {
+    tablaRanking('rank-tecnicos', d.tecnicos, [
+      { titulo: '#',       valor: pos },
+      { titulo: 'Técnico', valor: t => esc(t.tecnico_nombre), clase: 'nombre' },
+      { titulo: 'Jefe',    valor: t => esc(t.jefe_nombre ?? '—') },
+      { titulo: 'Total',   valor: t => t.total, num: true },
+      { titulo: 'Resc.',   valor: t => t.rescatada, num: true },
+      { titulo: 'No rec.', valor: t => t.cerrada, num: true },
+      { titulo: 'Motivo más repetido',
+        valor: t => t.motivo_frecuente ? `${esc(t.motivo_frecuente)} <span style="color:var(--text-tertiary)">(${t.motivo_veces})</span>` : '—' },
+    ], {
+      // Clic en un técnico → filtrar por él
+      onClick: t => {
+        if (![...selTec.options].some(o => o.value === t.tecnico_id)) selTec.add(new Option(t.tecnico_nombre, t.tecnico_id));
+        selTec.value = t.tecnico_id;
+        cargar();
+      },
+    });
+
+    tablaRanking('rank-motivos', d.motivos, [
+      { titulo: '#',       valor: pos },
+      { titulo: 'Motivo',  valor: m => esc(m.motivo_nombre), clase: 'nombre' },
+      { titulo: 'Total',   valor: m => m.total, num: true },
+      { titulo: 'Resc.',   valor: m => m.rescatada, num: true },
+      { titulo: 'No rec.', valor: m => m.cerrada, num: true },
+      { titulo: 'Quiénes más lo repiten', valor: m => esc(m.tecnicos_top ?? '—') },
+    ]);
+
+    const verJefes = d.porJefe.length > 1;
+    $('sec-jefes').style.display = verJefes ? 'block' : 'none';
+    if (verJefes) {
+      tablaRanking('tabla-jefes', d.porJefe, [
+        { titulo: 'Jefe',     valor: j => esc(j.jefe_nombre), clase: 'nombre' },
+        { titulo: 'Total',    valor: j => j.total, num: true },
+        { titulo: 'Resc.',    valor: j => j.rescatada, num: true },
+        { titulo: 'No rec.',  valor: j => j.cerrada, num: true },
+        { titulo: 'Activos',  valor: j => j.activos, num: true },
+      ], {
+        // Clic en un jefe → filtrar por él
+        onClick: j => {
+          if (esJefeEquipo) return;
+          selJefe.value = j.jefe_id;
+          selJefe.dispatchEvent(new Event('change'));
+        },
+      });
+    }
+  }
+
+  // ── Carga (con guardia contra respuestas viejas) ─────────────
+  let ultimaPeticion = 0;
+  let ultimosDatos   = null;
+
+  function feedback(msg, color) {
+    const fb = $('est-feedback');
+    fb.style.display = msg ? 'block' : 'none';
+    fb.style.color   = color ?? 'var(--danger)';
+    fb.textContent   = msg ?? '';
+  }
+
+  async function cargar() {
+    const id     = ++ultimaPeticion;
+    const filtro = filtroActual();
+    $('est-etiqueta').textContent = `Mostrando: ${etiquetaFiltro(filtro)}`;
+    feedback(null);
+    try {
+      const datos = await obtenerEstadisticas(paramsRpc(filtro));
+      if (id !== ultimaPeticion) return; // llegó una petición más nueva
+      ultimosDatos = { datos, filtro };
+      renderKpis(datos.resumen);
+      renderDonut(datos.resumen);
+      renderBarras(datos.porMes);
+      renderRankings(datos);
+    } catch (err) {
+      if (id !== ultimaPeticion) return;
+      console.error('[estadisticas]', err);
+      const faltaSql = /(Could not find the function|function) [^ ]*est_[a-z_]+/i.test(err.message);
+      feedback(faltaSql
+        ? 'Faltan las funciones de estadísticas en la base de datos (ejecutar sql/16_estadisticas_filtros.sql).'
+        : `Error: ${err.message}`);
+    }
+  }
+
+  // ── Eventos ───────────────────────────────────────────────────
+  selPer.addEventListener('change', () => {
+    selAnio.disabled = selPer.value === 'acumulado';
+    selMes.disabled  = selPer.value !== 'mes';
+    cargar();
+  });
+  selAnio.addEventListener('change', cargar);
+  selMes.addEventListener('change', cargar);
+  selTec.addEventListener('change', cargar);
+  selJefe.addEventListener('change', async () => {
+    selTec.value = '';
+    await cargarTecnicos();
+    cargar();
+  });
+
+  $('btn-pdf').addEventListener('click', async () => {
+    if (!ultimosDatos) return;
+    const btn   = $('btn-pdf');
+    const label = btn.querySelector('span');
+    const { datos, filtro } = ultimosDatos;
+    if (!Number(datos.resumen.total)) {
+      feedback('No hay expedientes con este filtro.', 'var(--warning)');
+      return;
+    }
+    label.textContent = 'Generando…';
     btn.disabled = true;
     try {
-      // Capturar gráfica de torta (si está renderizada)
-      const canvasDonut = document.getElementById('chart-donut');
-      const chartImg    = canvasDonut ? canvasDonut.toDataURL('image/png') : null;
-
-      // Cargar lista completa de expedientes para el informe
-      const { listarExpedientes } = await import('/js/expedientes.js');
-      const expedientes = await listarExpedientes({ limit: 200 });
-
-      const { exportarKPIs } = await import('/js/exportacion.js');
-      await exportarKPIs(_kpisResumen, _kpisTendencia, { chartImg, expedientes });
+      const chartImg = charts.barras ? $('chart-barras').toDataURL('image/png') : null;
+      const { exportarInforme } = await import('/js/exportacion.js');
+      await exportarInforme(datos, etiquetaFiltro(filtro), { chartImg });
+    } catch (err) {
+      feedback(`Error al generar el PDF: ${err.message}`);
     } finally {
-      btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Exportar PDF`;
+      label.textContent = 'Generar PDF';
       btn.disabled = false;
     }
   });
 
+  // ── Arranque ──────────────────────────────────────────────────
   try {
-    const [resumen, tendencia] = await Promise.all([
-      obtenerKpiResumen(),
-      obtenerKpiTendencia(6),
-      loadChartJs(),
-    ]);
-
-    _kpisResumen   = resumen;
-    _kpisTendencia = tendencia;
-
-    const activos    = (resumen.pendiente || 0) + (resumen.en_gestion || 0) + (resumen.pend_revision || 0);
-    const finalizados = (resumen.rescatada || 0) + (resumen.cerrada || 0);
-    const tasa       = finalizados > 0
-      ? Math.round(((resumen.rescatada || 0) / finalizados) * 100)
-      : null;
-
-    // KPI cards
-    const kpiGrid = document.getElementById('kpi-grid');
-    if (kpiGrid) {
-      kpiGrid.innerHTML =
-        kpiCard('Total', resumen.total || 0, 'var(--text-primary)') +
-        kpiCard('Activos', activos, 'var(--gestion-accent)') +
-        kpiCard('Rescatadas', resumen.rescatada || 0, 'var(--rescatada-accent)') +
-        kpiCard(
-          'Tasa rescate',
-          tasa !== null ? `${tasa}%` : '—',
-          'var(--rescatada-accent)',
-          finalizados > 0 ? `sobre ${finalizados} cerrados` : 'sin casos cerrados'
-        );
-    }
-
-    // Donut
-    const donutWrap = document.getElementById('donut-wrap');
-    if (donutWrap) {
-      donutWrap.innerHTML = '<canvas id="chart-donut" style="max-height:180px;"></canvas>';
-      new window.Chart(document.getElementById('chart-donut').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-          labels:   ESTADOS.map(e => e.label),
-          datasets: [{
-            data:            ESTADOS.map(e => resumen[e.key] || 0),
-            backgroundColor: ESTADOS.map(e => e.color),
-            borderWidth: 0,
-            hoverOffset: 4,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          cutout: '65%',
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed}` } },
-          },
-        },
-      });
-
-      const legend = document.getElementById('donut-legend');
-      if (legend) {
-        legend.innerHTML = ESTADOS.map(e => `
-          <div style="display:flex; align-items:center; gap:5px; font-size:var(--text-xs); color:var(--text-secondary);">
-            <span style="width:8px; height:8px; border-radius:2px; background:${e.color}; flex-shrink:0;"></span>
-            ${e.label} <strong style="color:var(--text-primary);">${resumen[e.key] || 0}</strong>
-          </div>`).join('');
-      }
-    }
-
-    // Barras
-    const barrasWrap = document.getElementById('barras-wrap');
-    if (barrasWrap) {
-      barrasWrap.innerHTML = '<canvas id="chart-barras"></canvas>';
-      new window.Chart(document.getElementById('chart-barras').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels:   tendencia.map(t => formatMes(t.mes)),
-          datasets: [{
-            label: 'Expedientes',
-            data:   tendencia.map(t => t.total),
-            backgroundColor: 'rgba(220,38,38,0.12)',
-            borderColor:     '#DC2626',
-            borderWidth: 1.5,
-            borderRadius: 4,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 1, font: { size: 10 } },
-              grid:  { color: 'rgba(0,0,0,0.04)' },
-            },
-            x: {
-              ticks: { font: { size: 10 } },
-              grid:  { display: false },
-            },
-          },
-        },
-      });
-    }
-
+    await Promise.all([loadChartJs(), cargarJefes()]);
   } catch (err) {
-    const kpiGrid = document.getElementById('kpi-grid');
-    if (kpiGrid) {
-      kpiGrid.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1;">
-          <p style="color:var(--danger); font-size:var(--text-sm);">${err.message}</p>
-        </div>`;
-    }
+    feedback(`No se pudo cargar el gráfico: ${err.message}`);
   }
-
-  // ── Informe mensual (admin_ppa y delegado) ────────────────────
-  const user = window.__getCurrentUser?.();
-  if (user?.rol === 'admin_ppa' || user?.rol === 'delegado') {
-    const section = document.getElementById('informe-mensual-section');
-    if (section) section.style.display = 'block';
-
-    // Rellenar selector de año: año actual y 2 anteriores
-    const anioSelect = document.getElementById('informe-anio');
-    const anioActual = new Date().getFullYear();
-    for (let a = anioActual; a >= anioActual - 2; a--) {
-      const opt = document.createElement('option');
-      opt.value = a;
-      opt.textContent = a;
-      anioSelect.appendChild(opt);
-    }
-
-    // Pre-seleccionar el mes anterior
-    const hoy       = new Date();
-    const mesAnterior = hoy.getMonth() === 0 ? 12 : hoy.getMonth();
-    const anioMes    = hoy.getMonth() === 0 ? anioActual - 1 : anioActual;
-    document.getElementById('informe-mes').value = mesAnterior;
-    anioSelect.value = anioMes;
-
-    // Botón generar
-    document.getElementById('btn-generar-informe')?.addEventListener('click', async () => {
-      const mes    = parseInt(document.getElementById('informe-mes').value, 10);
-      const anio   = parseInt(anioSelect.value, 10);
-      const btn    = document.getElementById('btn-generar-informe');
-      const fb     = document.getElementById('informe-feedback');
-      const MESES  = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-      const etiq   = `${MESES[mes]} ${anio}`;
-
-      btn.textContent = 'Generando…';
-      btn.disabled    = true;
-      fb.style.display = 'none';
-
-      try {
-        const datos = await obtenerInformeMensual(anio, mes);
-        if ((datos.kpi.total ?? 0) === 0) {
-          fb.style.color   = 'var(--warning)';
-          fb.textContent   = `No hay expedientes en ${etiq}.`;
-          fb.style.display = 'block';
-        } else {
-          const { exportarInformeMensual } = await import('/js/exportacion.js');
-          await exportarInformeMensual(datos, etiq);
-        }
-      } catch (err) {
-        fb.style.color   = 'var(--danger)';
-        fb.textContent   = `Error: ${err.message}`;
-        fb.style.display = 'block';
-      } finally {
-        btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg> Generar PDF`;
-        btn.disabled = false;
-      }
-    });
-  }
+  await cargarTecnicos();
+  await cargar();
 })();
 </script>

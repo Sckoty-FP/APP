@@ -10,7 +10,7 @@
  * Versión bumpeada a v3 para limpiar los caches incorrectos de v2.
  */
 
-const CACHE = 'sgr-ppa-v3';
+const CACHE = 'sgr-ppa-v4';
 
 // ── Instalación: solo el shell mínimo para abrir offline ───
 self.addEventListener('install', event => {

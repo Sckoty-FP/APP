@@ -126,168 +126,30 @@ export async function exportarExpedientes(expedientes, filtrosDesc) {
   doc.save(`expedientes_${_fechaArchivo()}.pdf`);
 }
 
-// ── Exportar resumen de KPIs ────────────────────────────────────
+// ── Informe de estadísticas (respeta el filtro activo de la pantalla) ──
+// datos = obtenerEstadisticas() → { resumen, porMes, porJefe, tecnicos, motivos }
+// etiqueta = etiquetaFiltro()   → "Jefe: Ana · Octubre 2026"
 
-export async function exportarKPIs(kpis, tendencia, extras = {}) {
+export async function exportarInforme(datos, etiqueta, extras = {}) {
   const JsPDF = await cargarJsPDF();
   const doc   = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const { resumen: kpi, porMes, porJefe, tecnicos, motivos } = datos;
 
-  let y = cabecera(doc, 'Informe de estadísticas');
-
-  // Calcular derivados
-  const activos     = (kpis.pendiente || 0) + (kpis.en_gestion || 0) + (kpis.pend_revision || 0);
-  const finalizados = (kpis.rescatada || 0) + (kpis.cerrada || 0);
-  const tasa        = finalizados > 0
-    ? Math.round(((kpis.rescatada || 0) / finalizados) * 100)
-    : 0;
-
-  // ── KPI cards (fila de 4 cajas) ──────────────────────────────
-  const tarjetas = [
-    { label: 'Total expedientes', valor: kpis.total     ?? 0 },
-    { label: 'Activos',           valor: activos              },
-    { label: 'Rescatadas',        valor: kpis.rescatada ?? 0 },
-    { label: 'Tasa de rescate',   valor: `${tasa}%`           },
-  ];
-
-  const boxW = 42, boxH = 20, gap = 4;
-  tarjetas.forEach((t, i) => {
-    const x = 14 + i * (boxW + gap);
-    doc.setFillColor(252, 245, 245);
-    doc.roundedRect(x, y, boxW, boxH, 2, 2, 'F');
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(92, 10, 10);
-    doc.text(String(t.valor), x + boxW / 2, y + 11, { align: 'center' });
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    doc.text(t.label, x + boxW / 2, y + 17, { align: 'center' });
-  });
-
-  y += boxH + 8;
-
-  // ── Gráfico de torta ─────────────────────────────────────────
-  if (extras.chartImg) {
-    const chartSize = 65;
-    doc.addImage(extras.chartImg, 'PNG', 14, y, chartSize, chartSize);
-
-    // Leyenda de estados al lado del gráfico
-    // pend_revision es el alias que devuelve el SQL de KPIs
-    const LABELS_KPI = {
-      en_gestion:    LABELS_ESTADO.en_gestion,
-      pend_revision: LABELS_ESTADO.pendiente_revision,
-      rescatada:     LABELS_ESTADO.rescatada,
-      cerrada:       LABELS_ESTADO.cerrada,
-    };
-    const COLORES = ['#6366f1', '#8b5cf6', '#10b981', '#6b7280'];
-    const keys    = Object.keys(LABELS_KPI);
-    let ly = y + 8;
-    keys.forEach((k, i) => {
-      const val = kpis[k] || 0;
-      doc.setFillColor(...hexToRgb(COLORES[i]));
-      doc.rect(85, ly - 3, 4, 4, 'F');
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(40, 40, 40);
-      doc.text(`${LABELS_KPI[k]}: ${val}`, 92, ly);
-      ly += 10;
-    });
-
-    y += chartSize + 6;
-  }
-
-  // ── Tendencia mensual ─────────────────────────────────────────
-  if (tendencia?.length) {
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(40, 40, 40);
-    doc.text('Tendencia mensual', 14, y);
-    y += 3;
-
-    doc.autoTable({
-      startY: y,
-      head: [['Mes', 'Nuevos', 'Rescatados', 'Cerrados']],
-      body: tendencia.map(t => [t.mes, t.nuevos ?? 0, t.rescatadas ?? 0, t.cerradas ?? 0]),
-      styles: { fontSize: 8, cellPadding: 2.5 },
-      headStyles: { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [252, 245, 245] },
-      margin: { left: 14, right: 14 },
-    });
-
-    y = doc.lastAutoTable.finalY + 8;
-  }
-
-  // ── Lista de expedientes ──────────────────────────────────────
-  if (extras.expedientes?.length) {
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(40, 40, 40);
-    doc.text('Lista de expedientes', 14, y);
-    y += 3;
-
-    doc.autoTable({
-      startY: y,
-      head: [['Nº Mant.', 'Instalación', 'Jefe de equipo', 'Motivo', 'Estado', 'Fecha']],
-      body: extras.expedientes.map(e => [
-        `#${e.mantenimiento}`,
-        e.instalacion,
-        e.jefe?.nombre ?? '—',
-        e.motivo?.slice(0, 45) + (e.motivo?.length > 45 ? '…' : '') ?? '—',
-        LABELS_ESTADO[e.estado] ?? e.estado,
-        new Date(e.fecha_creacion).toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'2-digit' }),
-      ]),
-      styles: { fontSize: 7, cellPadding: 2 },
-      headStyles: { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [252, 245, 245] },
-      columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 52 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 52 },
-        4: { cellWidth: 22 },
-        5: { cellWidth: 18 },
-      },
-      margin: { left: 14, right: 14 },
-    });
-  }
-
-  // Pie de página
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(7);
-    doc.setTextColor(160, 160, 160);
-    doc.text(`Página ${i} de ${pageCount}`, 196, 290, { align: 'right' });
-  }
-
-  doc.save(`informe_${_fechaArchivo()}.pdf`);
-}
-
-// ── Informe mensual ─────────────────────────────────────────────
-
-export async function exportarInformeMensual(datos, etiqueta) {
-  const JsPDF = await cargarJsPDF();
-  const doc   = new JsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-  const { kpi, jefes, motivos, tecnicos } = datos;
-
-  // ── Página — cabecera ─────────────────────────────────────────
-  let y = cabecera(doc, `Informe mensual — ${etiqueta}`, 'Análisis de PPA por período');
+  let y = cabecera(doc, `Informe de estadísticas — ${etiqueta}`, 'Análisis de PPA');
 
   // ── KPI boxes ────────────────────────────────────────────────
-  const finalizados = (kpi.rescatada || 0) + (kpi.cerrada || 0);
+  const finalizados = Number(kpi.rescatada || 0) + Number(kpi.cerrada || 0);
   const tasa = finalizados > 0
-    ? `${Math.round(((kpi.rescatada || 0) / finalizados) * 100)}%`
+    ? `${Math.round((Number(kpi.rescatada || 0) / finalizados) * 100)}%`
     : '—';
-  const activos = (kpi.pendiente || 0) + (kpi.en_gestion || 0) + (kpi.pend_revision || 0);
+  const activos = Number(kpi.en_gestion || 0) + Number(kpi.pend_revision || 0);
 
   const boxes = [
-    { label: 'Total expedientes', valor: kpi.total     ?? 0 },
-    { label: 'Activos',           valor: activos             },
+    { label: 'Total expedientes', valor: kpi.total ?? 0 },
+    { label: 'Activos',           valor: activos },
     { label: 'Rescatadas',        valor: kpi.rescatada ?? 0 },
-    { label: 'Tasa de rescate',   valor: tasa                },
+    { label: 'Tasa de rescate',   valor: tasa },
   ];
-
   const boxW = 42, boxH = 20, gap = 4;
   boxes.forEach((b, i) => {
     const x = 14 + i * (boxW + gap);
@@ -302,88 +164,58 @@ export async function exportarInformeMensual(datos, etiqueta) {
     doc.setTextColor(100, 100, 100);
     doc.text(b.label, x + boxW / 2, y + 17, { align: 'center' });
   });
-
   y += boxH + 10;
 
-  // ── Tabla: Jefes de equipo ────────────────────────────────────
-  _seccionTitulo(doc, 'Rendimiento por jefe de equipo', y);
-  y += 5;
+  const tabla = (titulo, head, body, columnStyles, vacio) => {
+    if (y > 250) { doc.addPage(); y = 20; }
+    _seccionTitulo(doc, titulo, y);
+    doc.autoTable({
+      startY: y + 5,
+      head: [head],
+      body: body.length ? body : [[vacio, ...head.slice(1).map(() => '')]],
+      styles:             { fontSize: 8, cellPadding: 2.5 },
+      headStyles:         { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [252, 245, 245] },
+      columnStyles,
+      margin: { left: 14, right: 14 },
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  };
+  const c = { halign: 'center' };
 
-  doc.autoTable({
-    startY: y,
-    head: [['Jefe de equipo', 'Total', 'Rescatadas', 'Cerradas', 'Activos']],
-    body: jefes.length
-      ? jefes.map(j => [j.jefe_nombre, j.total, j.rescatada, j.cerrada, j.activos])
-      : [['Sin datos para este período', '', '', '', '']],
-    styles:           { fontSize: 8, cellPadding: 3 },
-    headStyles:       { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [252, 245, 245] },
-    columnStyles: {
-      0: { cellWidth: 80 },
-      1: { cellWidth: 22, halign: 'center' },
-      2: { cellWidth: 27, halign: 'center' },
-      3: { cellWidth: 22, halign: 'center' },
-      4: { cellWidth: 22, halign: 'center' },
-    },
-    margin: { left: 14, right: 14 },
-  });
+  // ── Gráfico de barras capturado de la pantalla (opcional) ────
+  if (extras.chartImg) {
+    _seccionTitulo(doc, 'Expedientes por mes', y);
+    doc.addImage(extras.chartImg, 'PNG', 14, y + 4, 182, 55);
+    y += 65;
+  }
 
-  y = doc.lastAutoTable.finalY + 10;
+  tabla('Por mes (con acumulado)',
+    ['Mes', 'Total', 'Rescatadas', 'No recuperables', 'Acumulado'],
+    porMes.map(m => [m.mes, m.total, m.rescatada, m.cerrada, m.acumulado]),
+    { 1: c, 2: c, 3: c, 4: c }, 'Sin datos para este filtro');
 
-  // ── Tabla: Motivos de fallo ───────────────────────────────────
-  _seccionTitulo(doc, 'Motivos de fallo más frecuentes', y);
-  y += 5;
+  if (porJefe.length > 1) {
+    tabla('Por jefe de equipo',
+      ['Jefe de equipo', 'Total', 'Rescatadas', 'No recuperables', 'Activos'],
+      porJefe.map(j => [j.jefe_nombre, j.total, j.rescatada, j.cerrada, j.activos]),
+      { 0: { cellWidth: 70 }, 1: c, 2: c, 3: c, 4: c }, 'Sin datos');
+  }
 
-  doc.autoTable({
-    startY: y,
-    head: [['Motivo de fallo', 'Total', 'Rescatadas', 'Cerradas']],
-    body: motivos.length
-      ? motivos.map(m => [m.motivo_nombre, m.total, m.rescatada, m.cerrada])
-      : [['Sin datos para este período', '', '', '']],
-    styles:           { fontSize: 8, cellPadding: 3 },
-    headStyles:       { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [252, 245, 245] },
-    columnStyles: {
-      0: { cellWidth: 105 },
-      1: { cellWidth: 22, halign: 'center' },
-      2: { cellWidth: 27, halign: 'center' },
-      3: { cellWidth: 22, halign: 'center' },
-    },
-    margin: { left: 14, right: 14 },
-  });
+  tabla('Ranking de técnicos (más expedientes)',
+    ['#', 'Técnico', 'Jefe', 'Total', 'Resc.', 'No rec.', 'Motivo más repetido'],
+    tecnicos.map((t, i) => [i + 1, t.tecnico_nombre, t.jefe_nombre ?? '—', t.total, t.rescatada, t.cerrada,
+      t.motivo_frecuente ? `${t.motivo_frecuente} (${t.motivo_veces})` : '—']),
+    { 0: { cellWidth: 8, halign: 'center' }, 1: { cellWidth: 38 }, 2: { cellWidth: 32 },
+      3: { cellWidth: 13, ...c }, 4: { cellWidth: 13, ...c }, 5: { cellWidth: 14, ...c } },
+    'Sin técnicos asignados en este filtro');
 
-  y = doc.lastAutoTable.finalY + 10;
-
-  // ── Tabla: Técnicos ───────────────────────────────────────────
-  _seccionTitulo(doc, 'Análisis por técnico', y);
-  y += 5;
-
-  doc.autoTable({
-    startY: y,
-    head: [['Técnico', 'Jefe', 'Total', 'Resc.', 'Cerr.', 'Motivo más frecuente']],
-    body: tecnicos.length
-      ? tecnicos.map(t => [
-          t.tecnico_nombre,
-          t.jefe_nombre,
-          t.total,
-          t.rescatada,
-          t.cerrada,
-          t.motivo_frecuente ?? '—',
-        ])
-      : [['Sin técnicos asignados en este período', '', '', '', '', '']],
-    styles:           { fontSize: 7.5, cellPadding: 2.5 },
-    headStyles:       { fillColor: [92, 10, 10], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [252, 245, 245] },
-    columnStyles: {
-      0: { cellWidth: 42 },
-      1: { cellWidth: 38 },
-      2: { cellWidth: 14, halign: 'center' },
-      3: { cellWidth: 14, halign: 'center' },
-      4: { cellWidth: 14, halign: 'center' },
-      5: { cellWidth: 55 },
-    },
-    margin: { left: 14, right: 14 },
-  });
+  tabla('Errores más repetidos y quiénes los generan',
+    ['#', 'Motivo de fallo', 'Total', 'Resc.', 'No rec.', 'Técnicos que más lo repiten'],
+    motivos.map((m, i) => [i + 1, m.motivo_nombre, m.total, m.rescatada, m.cerrada, m.tecnicos_top ?? '—']),
+    { 0: { cellWidth: 8, halign: 'center' }, 1: { cellWidth: 55 },
+      2: { cellWidth: 13, ...c }, 3: { cellWidth: 13, ...c }, 4: { cellWidth: 14, ...c } },
+    'Sin datos para este filtro');
 
   // ── Pie de página ─────────────────────────────────────────────
   const pageCount = doc.internal.getNumberOfPages();
@@ -394,8 +226,9 @@ export async function exportarInformeMensual(datos, etiqueta) {
     doc.text(`Página ${i} de ${pageCount}`, 196, 290, { align: 'right' });
   }
 
-  const slug = etiqueta.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-  doc.save(`informe_mensual_${slug}_${_fechaArchivo()}.pdf`);
+  const slug = etiqueta.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  doc.save(`informe_${slug}_${_fechaArchivo()}.pdf`);
 }
 
 function _seccionTitulo(doc, texto, y) {
@@ -406,13 +239,6 @@ function _seccionTitulo(doc, texto, y) {
   doc.setDrawColor(220, 38, 38);
   doc.setLineWidth(0.4);
   doc.line(14, y + 1.5, 196, y + 1.5);
-}
-
-function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return [r, g, b];
 }
 
 function _fechaArchivo() {
