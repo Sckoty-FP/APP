@@ -160,7 +160,7 @@
     <div class="skeleton skeleton-card"></div>
   </div>
 
-  <!-- FAB nuevo — solo supervisor -->
+  <!-- FAB nuevo — roles en puedeCrearExpediente (config.js) -->
   <button
     id="exp-fab"
     aria-label="Nuevo expediente"
@@ -187,13 +187,13 @@
     import('/js/config.js'),
   ]);
   const { listarExpedientes, listarJefesEquipo, ESTADO_LABEL } = expMod;
-  const { calcularAntiguedad } = cfgMod;
+  const { calcularAntiguedad, puedeCrearExpediente } = cfgMod;
   const { getExpedientesConNotif, limpiarNotifExpediente }     = notifMod;
   const rol = window.__getCurrentRol?.();
 
-  // FAB — admin_ppa y delegado pueden crear expedientes (Módulo C)
+  // FAB — admin_ppa, delegado y jefe_equipo pueden crear expedientes (v4)
   const fab = document.getElementById('exp-fab');
-  if (rol === 'admin_ppa' || rol === 'delegado') {
+  if (puedeCrearExpediente(rol)) {
     fab.style.display = 'flex';
     fab.addEventListener('click', () => window.__navigate('#/nuevo'));
   }

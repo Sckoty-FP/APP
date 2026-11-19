@@ -56,10 +56,11 @@
 (async function () {
   const { listarJefesEquipo, listarTecnicosPorJefe, crearExpediente } = await import('/js/expedientes.js');
   const { listarMotivos } = await import('/js/motivos.js');
+  const { puedeCrearExpediente } = await import('/js/config.js');
   const user = window.__getCurrentUser?.();
 
-  // Solo admin_ppa y delegado pueden crear expedientes (Módulo C)
-  if (!user || (user.rol !== 'admin_ppa' && user.rol !== 'delegado')) {
+  // admin_ppa, delegado y jefe_equipo pueden crear (la BD valida con RLS, sql/15)
+  if (!user || !puedeCrearExpediente(user.rol)) {
     document.getElementById('form-nuevo').innerHTML = `
       <div class="empty-state">
         <p style="color:var(--danger);font-size:var(--text-sm);">No tenés permisos para crear expedientes.</p>
@@ -81,11 +82,20 @@
     motivoSelect.innerHTML = `<option value="">Error al cargar: ${err.message}</option>`;
   }
 
+  // Jefe de equipo: solo puede crear a su nombre → jefe fijo, sin elegir
+  const esJefeEquipo = user.rol === 'jefe_equipo';
+
   // Cargar jefes de equipo
   try {
-    const jefes = await listarJefesEquipo();
+    const jefes = esJefeEquipo
+      ? [{ id: user.id, nombre: user.nombre }]
+      : await listarJefesEquipo();
     if (!jefes.length) {
       jefeSelect.innerHTML = '<option value="">No hay jefes de equipo registrados</option>';
+    } else if (esJefeEquipo) {
+      jefeSelect.innerHTML = jefes.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
+      jefeSelect.value    = user.id;
+      jefeSelect.disabled = true;
     } else {
       jefeSelect.innerHTML =
         '<option value="">Seleccioná un jefe de equipo…</option>' +
@@ -115,6 +125,9 @@
       tecnicoSelect.disabled = false;
     }
   });
+
+  // Jefe de equipo: cargar sus técnicos de entrada
+  if (esJefeEquipo) jefeSelect.dispatchEvent(new Event('change'));
 
   // Submit
   document.getElementById('form-nuevo').addEventListener('submit', async (e) => {

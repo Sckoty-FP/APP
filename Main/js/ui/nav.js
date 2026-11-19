@@ -45,7 +45,7 @@ const NAV_ITEMS = [
 const NAV_ROUTES = {
   admin_ppa:   ['#/inicio', '#/expedientes', '#/nuevo', '#/estadisticas', '#/perfil'],
   delegado:    ['#/inicio', '#/expedientes', '#/nuevo', '#/estadisticas', '#/perfil'],
-  jefe_equipo: ['#/inicio', '#/expedientes', '#/estadisticas', '#/perfil'],
+  jefe_equipo: ['#/inicio', '#/expedientes', '#/nuevo', '#/estadisticas', '#/perfil'],
 };
 
 export function renderNav(activeRoute, rol) {

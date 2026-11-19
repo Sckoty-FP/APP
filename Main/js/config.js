@@ -17,6 +17,13 @@ export const LABELS_ROL = {
   jefe_equipo: 'Jefe de Equipo',
 };
 
+// Quién ve el botón/pantalla de crear expediente (v4: también jefe_equipo).
+// Es comodidad de UI: la BD lo valida con RLS (sql/15_jefe_crea_expedientes.sql).
+const ROLES_CREAN_EXPEDIENTES = new Set(['admin_ppa', 'delegado', 'jefe_equipo']);
+export function puedeCrearExpediente(rol) {
+  return ROLES_CREAN_EXPEDIENTES.has(rol);
+}
+
 // Antigüedad de un expediente abierto
 const ESTADOS_ABIERTOS = new Set(['en_gestion', 'pendiente_revision']);
 
