@@ -6,8 +6,8 @@
 
 ## Estado actual
 
-**Fase activa:** v4 en construccion (rama `feat/v4-estadisticas`, plan en `proyecto/plan-v4.md`).
-v3 completa y en produccion (main, cfb58bf, https://app-nu-eosin-14.vercel.app).
+**Fase activa:** v4 mergeada a main y pusheada (5ef6610, fast-forward). Pendiente: prueba en produccion.
+Produccion: https://app-nu-eosin-14.vercel.app
 **Ultima actualizacion:** 2026-11-19
 
 ### v4 — pedidos de Ruben (ago + nov 2026)
@@ -16,9 +16,9 @@ v3 completa y en produccion (main, cfb58bf, https://app-nu-eosin-14.vercel.app).
 - [x] Logica pura de filtros con tests (`node --test tests/unit/*.test.mjs`) — 998cbbb
 - [x] Pantalla Estadisticas: filtros jefe/tecnico/periodo, acumulado, rankings, PDF filtrado — d8a6237
 - [x] Revision adversarial (fable-auditor): 0 criticos/altos; 1 medio + 4 bajos arreglados (trigger proteger_campos_expediente en sql/15)
-- [ ] **DUEÑO:** ejecutar sql/15 y sql/16 en Supabase SQL Editor (en ese orden)
-- [ ] **DUEÑO:** probar con Ruben (admin) y test.jefe (jefe_equipo): crear expediente + estadisticas
-- [ ] **DUEÑO:** merge feat/v4-estadisticas → main + push (Vercel despliega). SQL ANTES del push.
+- [x] sql/15 y sql/16 ejecutados en Supabase (confirmado por el dueño 2026-11-19)
+- [ ] **DUEÑO:** probar EN PRODUCCION con Ruben (admin) y test.jefe (jefe_equipo): crear expediente + estadisticas (no se probo en local antes del merge)
+- [x] merge feat/v4-estadisticas → main + push (2026-11-19)
 - Imagenes: ya existian (fotos en comentarios). Video: descartado (Supabase free).
 
 ### v3 (cerrada, en main)
