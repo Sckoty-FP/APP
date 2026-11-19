@@ -6,8 +6,25 @@
 
 ## Estado actual
 
-**Fase activa:** v3 en construccion — Modulos A, B, C, G completados. D completado (codigo). E y F pendientes.
-**Ultima actualizacion:** 2026-07-22
+**Fase activa:** v4 en construccion (rama `feat/v4-estadisticas`, plan en `proyecto/plan-v4.md`).
+v3 completa y en produccion (main, cfb58bf, https://app-nu-eosin-14.vercel.app).
+**Ultima actualizacion:** 2026-11-19
+
+### v4 — pedidos de Ruben (ago + nov 2026)
+- [x] Jefes de equipo crean expedientes (RLS en sql/15) — c86d293
+- [x] Motor SQL de estadisticas con filtros (sql/16) — c5924be
+- [x] Logica pura de filtros con tests (`node --test tests/unit/*.test.mjs`) — 998cbbb
+- [x] Pantalla Estadisticas: filtros jefe/tecnico/periodo, acumulado, rankings, PDF filtrado — d8a6237
+- [x] Revision adversarial (fable-auditor): 0 criticos/altos; 1 medio + 4 bajos arreglados (trigger proteger_campos_expediente en sql/15)
+- [ ] **DUEÑO:** ejecutar sql/15 y sql/16 en Supabase SQL Editor (en ese orden)
+- [ ] **DUEÑO:** probar con Ruben (admin) y test.jefe (jefe_equipo): crear expediente + estadisticas
+- [ ] **DUEÑO:** merge feat/v4-estadisticas → main + push (Vercel despliega). SQL ANTES del push.
+- Imagenes: ya existian (fotos en comentarios). Video: descartado (Supabase free).
+
+### v3 (cerrada, en main)
+Modulos A-G completados y commiteados (E: 95af544, F: 6b3853f). Despues (07-30): informe mensual PDF,
+layout desktop con sidebar, boton instalar PWA, fixes de sesion/realtime, estado "pendiente" eliminado
++ boton No Recuperable (sql/13, sql/14).
 
 ---
 
@@ -50,10 +67,8 @@ live-server rompe los fragmentos HTML inyectando scripts dentro de los <svg>.
 
 ## Pendientes criticos
 
-- [ ] Ejecutar Main/sql/10_modulo_d.sql en Supabase SQL Editor (agrega columna matricula a tecnicos y usuarios)
-- [ ] Modulo E: tabla motivos_fallo + cambiar motivo a select en nuevo.html
-- [ ] Modulo F: importacion Excel rediseñada (depende de D y E)
-- [ ] Usuarios de prueba actualizados: ruben.beltran=admin_ppa, sergio.rey=delegado (v3)
+- [ ] Confirmar que sql/10 a sql/14 estan ejecutados en Supabase (no verificable desde el repo)
+- [ ] Ver checklist v4 arriba
 
 ## Usuarios de prueba (v3)
 

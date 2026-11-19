@@ -196,11 +196,14 @@
   }
 
   // ── Opciones de jefe / técnico ────────────────────────────────
+  let pedidoTecnicos = 0;
   async function cargarTecnicos() {
+    const id     = ++pedidoTecnicos;
     const previo = selTec.value;
-    selTec.innerHTML = '<option value="">Todos los técnicos</option>';
     try {
       const ts = await listarTecnicosFiltro(selJefe.value || null);
+      if (id !== pedidoTecnicos) return; // cambió el jefe mientras tanto
+      selTec.innerHTML = '<option value="">Todos los técnicos</option>';
       ts.forEach(t => selTec.add(new Option(t.nombre, t.id)));
       if (ts.some(t => t.id === previo)) selTec.value = previo;
     } catch (err) {

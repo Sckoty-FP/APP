@@ -72,12 +72,17 @@
   const tecnicoSelect = document.getElementById('f-tecnico');
   const motivoSelect  = document.getElementById('f-motivo');
 
+  // Opciones con new Option(): el nombre va como texto, nunca como HTML
+  function opciones(sel, placeholder, items) {
+    sel.innerHTML = '';
+    if (placeholder !== null) sel.add(new Option(placeholder, ''));
+    items.forEach(it => sel.add(new Option(it.nombre, it.id)));
+  }
+
   // Cargar motivos de fallo
   try {
     const motivos = await listarMotivos();
-    motivoSelect.innerHTML =
-      '<option value="">Seleccioná un motivo…</option>' +
-      motivos.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+    opciones(motivoSelect, 'Seleccioná un motivo…', motivos);
   } catch (err) {
     motivoSelect.innerHTML = `<option value="">Error al cargar: ${err.message}</option>`;
   }
@@ -93,13 +98,11 @@
     if (!jefes.length) {
       jefeSelect.innerHTML = '<option value="">No hay jefes de equipo registrados</option>';
     } else if (esJefeEquipo) {
-      jefeSelect.innerHTML = jefes.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
+      opciones(jefeSelect, null, jefes);
       jefeSelect.value    = user.id;
       jefeSelect.disabled = true;
     } else {
-      jefeSelect.innerHTML =
-        '<option value="">Seleccioná un jefe de equipo…</option>' +
-        jefes.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
+      opciones(jefeSelect, 'Seleccioná un jefe de equipo…', jefes);
     }
   } catch (err) {
     jefeSelect.innerHTML = `<option value="">Error: ${err.message}</option>`;
@@ -117,9 +120,7 @@
     try {
       const ts = await listarTecnicosPorJefe(jefeId);
       tecnicoSelect.disabled = false;
-      tecnicoSelect.innerHTML =
-        '<option value="">— Sin técnico asignado —</option>' +
-        ts.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
+      opciones(tecnicoSelect, '— Sin técnico asignado —', ts);
     } catch (err) {
       tecnicoSelect.innerHTML = `<option value="">Error: ${err.message}</option>`;
       tecnicoSelect.disabled = false;

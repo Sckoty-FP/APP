@@ -32,6 +32,42 @@ CREATE POLICY "expedientes: insertar por rol"
     )
   );
 
--- Verificación: debe listar la política nueva con cmd = INSERT
+
+-- ── UPDATE: cerrar el atajo "inserto bien y después edito" ──────────────────
+-- Hallazgo de la revisión adversarial v4: la política UPDATE de 09 solo mira
+-- jefe_id, así que un jefe podía insertar bien y luego cambiar el técnico por
+-- uno de otro equipo, o reescribir creado_por.
+-- Se resuelve con TRIGGER (no con la política) porque hay que comparar con OLD:
+-- si el técnico de un expediente viejo cambió de equipo, el jefe tiene que
+-- poder seguir editándolo mientras NO toque tecnico_id.
+CREATE OR REPLACE FUNCTION proteger_campos_expediente()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+AS $$
+BEGIN
+  -- creado_por es histórico: nadie lo reescribe
+  NEW.creado_por := OLD.creado_por;
+
+  IF rol_actual() = 'jefe_equipo'
+     AND NEW.tecnico_id IS DISTINCT FROM OLD.tecnico_id
+     AND NEW.tecnico_id IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM tecnicos t
+                     WHERE t.id = NEW.tecnico_id AND t.jefe_id = auth.uid())
+  THEN
+    RAISE EXCEPTION 'Solo podés asignar técnicos de tu equipo.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_proteger_campos_expediente ON expedientes;
+CREATE TRIGGER trg_proteger_campos_expediente
+  BEFORE UPDATE ON expedientes
+  FOR EACH ROW EXECUTE FUNCTION proteger_campos_expediente();
+
+
+-- Verificación: política INSERT nueva + trigger creado
 SELECT policyname, cmd FROM pg_policies
 WHERE tablename = 'expedientes' ORDER BY cmd, policyname;
+SELECT tgname FROM pg_trigger WHERE tgrelid = 'expedientes'::regclass AND NOT tgisinternal;

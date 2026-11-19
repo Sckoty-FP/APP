@@ -69,7 +69,12 @@ AS $$
     FROM est_base(p_jefe, p_tecnico, p_desde, p_hasta) x
   ),
   meses AS (
-    SELECT generate_series(MIN(m), MAX(m), interval '1 month')::date AS m FROM b
+    -- Cubre TODO el período pedido (meses sin datos en 0); en acumulado, del primer al último dato
+    SELECT generate_series(
+             COALESCE(date_trunc('month', p_desde)::date, MIN(m)),
+             COALESCE(date_trunc('month', p_hasta - 1)::date, MAX(m)),
+             interval '1 month')::date AS m
+    FROM b HAVING COUNT(*) > 0
   ),
   agg AS (
     SELECT meses.m,
@@ -108,7 +113,8 @@ $$;
 
 
 -- ── 5. Ranking de técnicos (quién más repite) ────────────────────────────────
--- jefe_nombre = jefe ACTUAL del técnico (tecnicos.jefe_id).
+-- jefe_nombre = jefe(s) de los EXPEDIENTES contados (histórico, decisión #4 del
+-- CLAUDE.md), no el jefe actual del técnico: así un jefe_equipo nunca ve otro nombre.
 CREATE OR REPLACE FUNCTION est_ranking_tecnicos(
   p_jefe uuid DEFAULT NULL, p_tecnico uuid DEFAULT NULL,
   p_desde date DEFAULT NULL, p_hasta date DEFAULT NULL
@@ -128,7 +134,7 @@ AS $$
            ROW_NUMBER() OVER (PARTITION BY b.tecnico_id ORDER BY COUNT(*) DESC, b.motivo_id) AS rn
     FROM b GROUP BY b.tecnico_id, b.motivo_id
   )
-  SELECT t.id, t.nombre, u.nombre,
+  SELECT t.id, t.nombre, string_agg(DISTINCT u.nombre, ', '),
          COUNT(*),
          COUNT(*) FILTER (WHERE b.estado = 'rescatada'),
          COUNT(*) FILTER (WHERE b.estado = 'cerrada'),
@@ -138,8 +144,8 @@ AS $$
          (SELECT tm.n FROM tm WHERE tm.tecnico_id = t.id AND tm.rn = 1)
   FROM b
   JOIN tecnicos t      ON t.id = b.tecnico_id
-  LEFT JOIN usuarios u ON u.id = t.jefe_id
-  GROUP BY t.id, t.nombre, u.nombre
+  LEFT JOIN usuarios u ON u.id = b.jefe_id
+  GROUP BY t.id, t.nombre
   ORDER BY COUNT(*) DESC, t.nombre;
 $$;
 
